@@ -28,11 +28,6 @@ import { useAuthState } from "react-firebase-hooks/auth"
 
 const navItems = [
   {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
     label: "Profile Score",
     href: "/dashboard/profile-score",
     icon: Star,
@@ -67,12 +62,12 @@ export function AppSidebar() {
   return (
     <Sidebar>
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-border">
+      <div className="px-4 py-5 border-b border-border flex justify-center">
         <span
           className="text-lg font-semibold tracking-tight text-gradient"
           style={{ fontFamily: "Space Grotesk, sans-serif" }}
         >
-          Upvik
+          UPVIK
         </span>
       </div>
 
@@ -109,16 +104,16 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer — logged in user + logout */}
+
       <SidebarFooter className="border-t border-border p-3">
         <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-secondary/60 mb-2">
-          {/* Avatar */}
+
           <div className="h-8 w-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
             <span className="text-xs font-semibold text-primary">
               {user?.email?.charAt(0).toUpperCase() ?? "U"}
             </span>
           </div>
-          {/* Info */}
+
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-foreground truncate">
               {user?.displayName ?? "User"}
@@ -129,7 +124,6 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"

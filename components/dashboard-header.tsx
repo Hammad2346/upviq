@@ -37,7 +37,7 @@ const placeholderNotifications = [
 ]
 
 export function DashboardHeader() {
-  const engineLive = false
+  const [engineLive,setEngineLive]=useState(true)
   const [notifOpen, setNotifOpen] = useState(false)
   const [search, setSearch] = useState("")
 

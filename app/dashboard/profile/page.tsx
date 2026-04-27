@@ -1,5 +1,300 @@
-export default function Page(){
-    return(
-        <div></div>
-    )
+"use client";
+
+import { useState } from "react";
+import {
+  MapPin, Star, Clock, Award, Link2, Briefcase,
+  ChevronDown, ChevronUp, Search, ExternalLink,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+
+const PROFILE_DATA = {
+  name: "Salman S.",
+  title: "Top AI-Enabled Game Developer | AR/VR/XR Specialist | Unity | Unreal",
+  location: "Pakistan",
+  avatarUrl: "https://www.upwork.com/profile-portraits/c13wfUX9wS7Q_38tVOBma1v5_gAkcQ453kLjxa1Nuw6gc8xhARhSo1RphQoI43MSa_",
+  profileUrl: "https://www.upwork.com/freelancers/~01daa0337b257ef5b5?referrer_url_path=/nx/search/talent/",
+  rate: 18,
+  jobSuccess: 100,
+  earnings: "10M+ downloads",
+  hasAvailableNow: true,
+  hasTopRated: true,
+  jobsRelatedCount: 10,
+  skills: [
+    "Video Game", "Game Development", "Game Level", "Game Design",
+    "Game Design Document", "Unity", "Unreal Engine", "Online Multiplayer",
+    "WebGL", "C#", "Android", "Photon Unity Networking",
+    "Game Customization", "Mobile Game Development", "React Native",
+  ],
+  description: `🥇 Game Design & Developer. "Let me say some words about this seller: OUTSTANDING PROFESSIONAL, OUTSTANDING PERSON, and OUTSTANDING EXPERIENCE for me. Delivered as promised and with dedication. 10 Stars from me. Thanks!" — jacksparrow427
+
+They say, "Choose a job you love, and you will never have to work a day in your life." For a passionate gamer, what could be better than designing and developing games? I'm here to bring your ideas to life, guiding them from initial concepts through to final production using a well-structured Game Development Life Cycle (GDLC).
+
+With over 10 years of industry experience, I've developed a wide range of cross-platform games for PC, Android, iOS, and WebGL. My work has garnered over 10 million downloads on mobile platforms, proving the impact and success of the games I've created.
+
+I specialize in both 2D and 3D game development, across various genres, including:
+🎮 Platformers and Endless Runners
+🃏 Board Games and Card Games (Single Player and Multiplayer)
+⚡ Hyper-casual/One-Tap Games
+🔫 First-Person and Third-Person Shooters (Single Player and Multiplayer)
+🛡️ RPG / Open World Games
+🛠️ Simulation Games (Single-player and Multiplayer)
+👾 Arcade/Action Games`,
+  scrapedAt: "2026-04-01T08:36:42.806Z",
+};
+
+
+function StatBox({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="glass-card rounded-2xl p-4 flex flex-col gap-1 glow-border">
+      <span className="text-xs font-semibold tracking-widest uppercase text-[hsl(215_20%_55%)]">{label}</span>
+      <span
+        className="text-2xl font-bold tracking-tight"
+        style={highlight ? { color: "hsl(190 95% 55%)" } : undefined}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+
+function SkillPill({ label }: { label: string }) {
+  return (
+    <span className="px-3 py-1 rounded-full text-xs font-medium border border-[hsl(224_30%_18%)] bg-[hsl(224_30%_10%)] text-[hsl(215_20%_75%)]">
+      {label}
+    </span>
+  );
+}
+
+
+function Badge({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
+  return (
+    <span
+      className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border"
+      style={{ color, borderColor: `${color}40`, background: `${color}12` }}
+    >
+      {icon}
+      {label}
+    </span>
+  );
+}
+
+
+export default function ProfilePage() {
+  const [url, setUrl] = useState("");
+  const [analyzed, setAnalyzed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
+
+  const profile = PROFILE_DATA;
+  const descLines = profile.description.split("\n");
+  const descPreview = descLines.slice(0, 4).join("\n");
+
+  function handleAnalyze() {
+    if (!url.trim()) return;
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setAnalyzed(true);
+    }, 1400);
+  }
+
+  return (
+    <div className="min-h-screen space-y-8">
+
+      <div className="space-y-1">
+        <p className="text-xs font-bold tracking-[0.2em] uppercase text-[hsl(190_95%_55%)]">
+          Profile Analyzer
+        </p>
+        <h1
+          className="text-2xl font-bold tracking-tight text-foreground"
+          style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
+        >
+          Analyze any Upwork profile
+        </h1>
+        <p className="text-[hsl(215_20%_55%)] text-sm">
+          Paste a public Upwork profile URL to pull key data and review it at a glance.
+        </p>
+      </div>
+
+      <hr className="border-[hsl(224_30%_16%)]" />
+
+      <div
+        className="glass-card glow-border rounded-2xl p-8 flex flex-col items-center gap-6"
+        style={{
+          background: "radial-gradient(ellipse at top, hsl(190 95% 55% / 0.06), transparent 60%), hsl(224 39% 9% / 0.8)",
+        }}
+      >
+
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center"
+          style={{ background: "linear-gradient(135deg, hsl(190 95% 55% / 0.15), hsl(265 85% 65% / 0.1))", border: "1px solid hsl(190 95% 55% / 0.2)" }}
+        >
+          <Search size={22} className="text-[hsl(190_95%_55%)]" />
+        </div>
+
+        <div className="text-center space-y-1">
+          <p className="text-base font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}>
+            Enter a profile URL
+          </p>
+          <p className="text-xs text-[hsl(215_20%_50%)]">
+            e.g. https://www.upwork.com/freelancers/~xxxxxxxxxxxxxxx
+          </p>
+        </div>
+
+
+        <div className="flex w-full max-w-2xl gap-3">
+          <div className="relative flex-1">
+            <Link2 size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-[hsl(215_20%_50%)]" />
+            <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
+              placeholder="https://www.upwork.com/freelancers/~..."
+              className="pl-10 h-12 rounded-xl bg-[hsl(224_30%_10%)] border-[hsl(224_30%_18%)] text-foreground placeholder:text-[hsl(215_20%_35%)] focus-visible:ring-[hsl(190_95%_55%/0.4)] text-sm"
+            />
+          </div>
+          <Button
+            onClick={handleAnalyze}
+            disabled={!url.trim() || loading}
+            className="h-12 px-6 rounded-xl font-semibold text-sm shrink-0"
+            style={{
+              background: url.trim() && !loading
+                ? "linear-gradient(135deg, hsl(190 95% 55%), hsl(195 100% 65%))"
+                : "hsl(224 30% 14%)",
+              color: url.trim() && !loading ? "hsl(224 47% 6%)" : "hsl(215 20% 40%)",
+              boxShadow: url.trim() && !loading ? "0 0 24px hsl(190 95% 55% / 0.3)" : "none",
+              transition: "all 0.2s ease",
+            }}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                Analyzing…
+              </span>
+            ) : "Analyze"}
+          </Button>
+        </div>
+
+        {!analyzed && (
+          <button
+            onClick={() => { setUrl(profile.profileUrl); setAnalyzed(true); }}
+            className="text-xs text-[hsl(190_95%_55%)] underline underline-offset-2 hover:opacity-80 transition-opacity"
+          >
+            Load demo profile
+          </button>
+        )}
+      </div>
+
+
+      {analyzed && (
+        <div className="space-y-5">
+
+          <div className="glass-card glow-border rounded-2xl p-6">
+            <div className="flex flex-col sm:flex-row gap-5">
+
+              <div className="shrink-0">
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.name}
+                  className="w-20 h-20 rounded-2xl object-cover"
+                  style={{ border: "2px solid hsl(224 30% 18%)" }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </div>
+
+
+              <div className="flex-1 space-y-2.5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2
+                      className="text-lg font-bold text-foreground"
+                      style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
+                    >
+                      {profile.name}
+                    </h2>
+                    <p className="text-sm text-[hsl(215_20%_65%)] mt-0.5 max-w-xl leading-snug">
+                      {profile.title}
+                    </p>
+                  </div>
+                  <a
+                    href={profile.profileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-medium text-[hsl(190_95%_55%)] hover:opacity-75 transition-opacity shrink-0"
+                  >
+                    View on Upwork <ExternalLink size={12} />
+                  </a>
+                </div>
+
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex items-center gap-1.5 text-xs text-[hsl(215_20%_60%)]">
+                    <MapPin size={12} /> {profile.location}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-[hsl(215_20%_60%)]">
+                    <Briefcase size={12} /> {profile.jobsRelatedCount} jobs
+                  </span>
+                  <span className="text-xs text-[hsl(215_20%_35%)]">·</span>
+                  <span className="text-xs text-[hsl(215_20%_50%)]">
+                    Scraped {new Date(profile.scrapedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {profile.hasTopRated && (
+                    <Badge icon={<Award size={11} />} label="Top Rated" color="hsl(38 95% 60%)" />
+                  )}
+                  {profile.hasAvailableNow && (
+                    <Badge icon={<Clock size={11} />} label="Available Now" color="hsl(145 70% 50%)" />
+                  )}
+                  <Badge icon={<Star size={11} />} label={`${profile.jobSuccess}% Job Success`} color="hsl(190 95% 55%)" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <StatBox label="Hourly Rate"   value={`$${profile.rate}/hr`} />
+            <StatBox label="Job Success"   value={`${profile.jobSuccess}%`} highlight />
+            <StatBox label="Related Jobs"  value={`${profile.jobsRelatedCount}`} />
+            <StatBox label="Mobile Impact" value="10M+" highlight />
+          </div>
+
+
+          <div className="glass-card glow-border rounded-2xl p-6 space-y-4">
+            <div className="space-y-0.5">
+              <p className="text-sm font-bold text-foreground">Skills</p>
+              <p className="text-xs text-[hsl(215_20%_50%)]">{profile.skills.length} skills listed on profile</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {profile.skills.map((s) => <SkillPill key={s} label={s} />)}
+            </div>
+          </div>
+
+          <div className="glass-card glow-border rounded-2xl p-6 space-y-4">
+            <div className="space-y-0.5">
+              <p className="text-sm font-bold text-foreground">Overview</p>
+              <p className="text-xs text-[hsl(215_20%_50%)]">Profile bio as shown on Upwork</p>
+            </div>
+            <p className="text-sm text-[hsl(215_20%_70%)] leading-relaxed whitespace-pre-line">
+              {descExpanded ? profile.description : descPreview}
+              {!descExpanded && "…"}
+            </p>
+            <button
+              onClick={() => setDescExpanded(!descExpanded)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-[hsl(190_95%_55%)] hover:opacity-75 transition-opacity"
+            >
+              {descExpanded ? <><ChevronUp size={13} /> Show less</> : <><ChevronDown size={13} /> Read more</>}
+            </button>
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
 }
