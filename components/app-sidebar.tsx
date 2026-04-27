@@ -72,7 +72,7 @@ export function AppSidebar() {
           className="text-lg font-semibold tracking-tight text-gradient"
           style={{ fontFamily: "Space Grotesk, sans-serif" }}
         >
-          Upwik
+          Upvik
         </span>
       </div>
 
