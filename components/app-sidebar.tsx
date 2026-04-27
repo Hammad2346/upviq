@@ -74,7 +74,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs text-muted-foreground/60 uppercase tracking-widest px-3 mb-1">
-            Navigation
+            WORKSPACE
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

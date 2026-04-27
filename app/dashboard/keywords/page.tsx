@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Plus, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Search, Plus} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AddKeywordDialog from "@/components/keyword/add-keyword-dialog";
@@ -11,7 +11,7 @@ import CompetitionBar from "@/components/keyword/competition-bar";
 import TrendIcon from "@/components/keyword/trend-icon";
 import OpportunityBadge from "@/components/keyword/opportunity-badge";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+
 type Opportunity = "High" | "Medium" | "Low";
 type TrendDir = "up" | "down" | "flat";
 
@@ -164,7 +164,6 @@ export default function KeywordsPage() {
         )}
       </div>
 
-      {/* ── Dialog ─────────────────────────────────────────────────────────── */}
       <AddKeywordDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}

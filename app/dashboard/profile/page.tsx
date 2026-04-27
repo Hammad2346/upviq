@@ -91,7 +91,6 @@ export default function ProfilePage() {
   const profile = PROFILE_DATA;
   const descLines = profile.description.split("\n");
   const descPreview = descLines.slice(0, 4).join("\n");
-
   function handleAnalyze() {
     if (!url.trim()) return;
     setLoading(true);
