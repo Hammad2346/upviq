@@ -144,7 +144,7 @@ export default function ProfileScorePage() {
   return (
     <div className="min-h-screen space-y-6">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-xs font-bold tracking-[0.2em] uppercase text-[hsl(190_95%_55%)]">
@@ -175,10 +175,8 @@ export default function ProfileScorePage() {
 
       <hr className="border-[hsl(224_30%_16%)]" />
 
-      {/* ── Top two-col: circular score + small trajectory ──────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-5">
 
-        {/* Circular score card */}
         <div className="glass-card glow-border rounded-2xl p-6 flex flex-col items-center gap-5">
           <CircularScore score={SCORE_NOW} />
           <div className="text-center space-y-1">
@@ -194,7 +192,6 @@ export default function ProfileScorePage() {
           </div>
         </div>
 
-        {/* Small trajectory chart card */}
         <div className="glass-card glow-border rounded-2xl p-6 space-y-3">
           <div>
             <p className="text-sm font-bold text-foreground">42-day trajectory</p>
@@ -219,7 +216,6 @@ export default function ProfileScorePage() {
         </div>
       </div>
 
-      {/* ── Profile Score Evolution (full-width) ────────────────────────────── */}
       <div className="glass-card glow-border rounded-2xl p-6 space-y-4">
         <div className="flex items-start justify-between">
           <div className="space-y-0.5">
@@ -274,7 +270,6 @@ export default function ProfileScorePage() {
         </div>
       </div>
 
-      {/* ── Score breakdown ─────────────────────────────────────────────────── */}
       <div className="glass-card glow-border rounded-2xl p-6 space-y-5">
         <div className="flex items-start justify-between">
           <div className="space-y-0.5">

@@ -124,8 +124,6 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen space-y-6">
-
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="space-y-1">
         <p className="text-xs font-bold tracking-[0.2em] uppercase text-[hsl(190_95%_55%)]">
           Account

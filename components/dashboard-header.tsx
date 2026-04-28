@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { Bell, Search } from "lucide-react"
+import SearchCommand from "./header/search-bar"
 
 const placeholderNotifications = [
   {
@@ -46,25 +47,16 @@ export function DashboardHeader() {
   return (
     <header className="h-14 border-b border-border flex items-center gap-3 px-4 bg-card/60 backdrop-blur-sm sticky top-0 z-10">
 
-      {/* Sidebar trigger */}
+
       <SidebarTrigger className="text-muted-foreground hover:text-foreground shrink-0" />
 
-      {/* Search bar */}
-      <div className="relative flex-1 max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          type="text"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 h-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60 text-sm"
-        />
-      </div>
 
-      {/* Right side */}
+    <SearchCommand/>
+
+
       <div className="ml-auto flex items-center gap-3">
 
-        {/* Engine status badge */}
+
         <Badge
           variant="outline"
           className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border select-none ${
@@ -88,7 +80,7 @@ export function DashboardHeader() {
           Engine {engineLive ? "Live" : "Offline"}
         </Badge>
 
-        {/* Bell with notification popover */}
+
         <Popover open={notifOpen} onOpenChange={setNotifOpen}>
           <PopoverTrigger asChild>
             <Button

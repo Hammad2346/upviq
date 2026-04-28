@@ -61,7 +61,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      {/* Logo */}
+  
       <div className="px-4 py-5 border-b border-border flex justify-center">
         <span
           className="text-lg font-semibold tracking-tight text-gradient"
