@@ -40,8 +40,8 @@ export default function SearchCommand() {
         />
       </div>
 
-      <CommandDialog open={open} onOpenChange={setOpen} className="sm:max-w-lg">
-        <Command>
+      <CommandDialog open={open} onOpenChange={setOpen} className="sm:max-w-lg ">
+        <Command className="glow-border">
           <CommandInput
             value={search}
             onValueChange={setSearch}

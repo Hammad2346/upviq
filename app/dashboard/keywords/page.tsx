@@ -109,13 +109,13 @@ export default function KeywordsPage() {
 
       <hr className="border-[hsl(224_30%_16%)]" />
 
-      <div className="relative w-full max-w-lg ">
+      <div className="relative w-full max-w-lg glow-border rounded-xl">
         <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary z-10" />
         <Input
           placeholder="Filter keywords..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-10 rounded-xl bg-[hsl(224_30%_10%)] text-foreground placeholder:text-[hsl(215_20%_45%)] focus-visible:ring-[hsl(190_95%_55%/0.5)] glow-border"
+          className="pl-10 rounded-xl bg-[hsl(224_30%_10%)] text-foreground placeholder:text-[hsl(215_20%_45%)] focus-visible:ring-[hsl(190_95%_55%/0.5)]"
         />
       </div>
 

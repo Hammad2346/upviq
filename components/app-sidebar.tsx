@@ -61,7 +61,6 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-  
       <div className="px-4 py-5 border-b border-border flex justify-center">
         <span
           className="text-lg font-semibold tracking-tight text-gradient"
@@ -103,8 +102,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-
       <SidebarFooter className="border-t border-border p-3">
         <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-secondary/60 mb-2">
 

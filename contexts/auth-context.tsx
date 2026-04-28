@@ -1,0 +1,43 @@
+"use client"
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  useContext,
+  createContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+const authContext = createContext({
+  firebaseUser: null,
+  dbUser: null,
+  loading: null,
+  isAdmin: null,
+});
+export function AuthContext({ children }: { children: ReactNode }) {
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>();
+  const [dbUser, setDbUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin,setIsAdmin]=useState(false)
+  const pathName = usePathname();
+  const router = useRouter();
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      if (!fbUser) {
+        pathName.startsWith("/dashboard");
+        router.replace("/login");
+      }
+    });
+    return ()=> unsubscribe();
+  }, [pathName]);
+
+
+  return (
+    <authContext.Provider value={{ firebaseUser, dbUser, loading, isAdmin }}>
+      {children}
+    </authContext.Provider>
+  );
+}
+export const useAuth=() => useContext(authContext)

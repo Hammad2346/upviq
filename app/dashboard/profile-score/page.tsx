@@ -13,7 +13,7 @@ import {
   CartesianGrid,
 } from "recharts";
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+
 const TRAJECTORY = [
   { day: "Day 1",  score: 62 },
   { day: "Day 7",  score: 67 },
@@ -37,7 +37,7 @@ const SCORE_NOW   = 94;
 const SCORE_START = 62;
 const SCORE_GAIN  = SCORE_NOW - SCORE_START;
 
-// ─── Circular progress ────────────────────────────────────────────────────────
+
 function CircularScore({ score }: { score: number }) {
   const size   = 180;
   const stroke = 12;
@@ -75,7 +75,7 @@ function CircularScore({ score }: { score: number }) {
   );
 }
 
-// ─── Dimension bar ────────────────────────────────────────────────────────────
+
 function DimensionRow({ label, weight, score, delay }: { label: string; weight: number; score: number; delay: number }) {
   const [width, setWidth] = useState(0);
   useEffect(() => {
@@ -109,7 +109,7 @@ function DimensionRow({ label, weight, score, delay }: { label: string; weight: 
   );
 }
 
-// ─── Tooltips ─────────────────────────────────────────────────────────────────
+
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
@@ -120,7 +120,7 @@ function ChartTooltip({ active, payload, label }: any) {
   );
 }
 
-// ─── Mini stat ────────────────────────────────────────────────────────────────
+
 function MiniStat({ value, label, green }: { value: string; label: string; green?: boolean }) {
   return (
     <div className="flex-1 rounded-xl bg-[hsl(224_30%_10%)] border border-[hsl(224_30%_16%)] px-4 py-3 flex flex-col items-center gap-0.5">
@@ -132,7 +132,7 @@ function MiniStat({ value, label, green }: { value: string; label: string; green
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function ProfileScorePage() {
   const [recomputing, setRecomputing] = useState(false);
 

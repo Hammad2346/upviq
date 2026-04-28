@@ -6,7 +6,7 @@ export default function OpportunityBadge({ level }: { level: Opportunity }) {
     Low:    "bg-[hsl(0_75%_60%/0.15)]   text-[hsl(0_75%_65%)]   border border-[hsl(0_75%_60%/0.3)]",
   };
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${styles[level]}`}>
+    <span className={`px-3 py-1 rounded-full flex justify-center text-xs font-semibold tracking-wide ${styles[level]}`}>
       {level}
     </span>
   );
