@@ -38,42 +38,38 @@ const placeholderNotifications = [
 ]
 
 export function DashboardHeader() {
-  const [engineLive,setEngineLive]=useState(true)
+  const [engineLive, setEngineLive] = useState(true)
   const [notifOpen, setNotifOpen] = useState(false)
   const [search, setSearch] = useState("")
 
   const unreadCount = placeholderNotifications.filter((n) => n.unread).length
 
   return (
-    <header className="h-14 border-b border-border flex items-center gap-3 px-4 bg-card/60 backdrop-blur-sm sticky top-0 z-10">
-
+    <header className="h-14 border-b border-border flex items-center gap-3 px-4 bg-white sticky top-0 z-10">
 
       <SidebarTrigger className="text-muted-foreground hover:text-foreground shrink-0" />
 
-
-    <SearchCommand/>
-
+      <SearchCommand />
 
       <div className="ml-auto flex items-center gap-3">
-
-
+  
         <Badge
           variant="outline"
-          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border select-none ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold border select-none transition-all ${
             engineLive
-              ? "border-green-500/30 text-green-400 bg-green-500/10"
-              : "border-red-500/30 text-red-400 bg-red-500/10"
+              ? "border-primary/30 text-primary bg-primary/5"
+              : "border-destructive/30 text-destructive bg-destructive/5"
           }`}
         >
           <span className="relative flex h-2 w-2">
             <span
               className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                engineLive ? "bg-green-400" : "bg-red-400"
+                engineLive ? "bg-primary" : "bg-destructive"
               }`}
             />
             <span
               className={`relative inline-flex rounded-full h-2 w-2 ${
-                engineLive ? "bg-green-400" : "bg-red-400"
+                engineLive ? "bg-primary" : "bg-destructive"
               }`}
             />
           </span>
@@ -87,7 +83,7 @@ export function DashboardHeader() {
               type="button"
               variant="ghost"
               size="icon"
-              className="relative h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-secondary"
+              className="relative h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-gray-100 transition-colors"
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
@@ -98,31 +94,32 @@ export function DashboardHeader() {
           <PopoverContent
             align="end"
             sideOffset={8}
-            className="w-80 p-0 bg-card border-border shadow-lg"
+            className="w-80 p-0 bg-white border-border shadow-lg"
           >
+
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <span
-                className="text-sm font-semibold text-foreground"
-                style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                className="text-sm font-bold text-foreground"
+                style={{ fontFamily: "Arial, sans-serif" }}
               >
                 Notifications
               </span>
               {unreadCount > 0 && (
-                <span className="text-xs text-primary">{unreadCount} unread</span>
+                <span className="text-xs font-semibold text-primary">{unreadCount} unread</span>
               )}
             </div>
 
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border max-h-96 overflow-y-auto">
               {placeholderNotifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`px-4 py-3 hover:bg-secondary/60 transition-colors cursor-pointer ${
-                    n.unread ? "bg-primary/5" : ""
+                  className={`px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${
+                    n.unread ? "bg-primary/3" : ""
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {n.title}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
@@ -140,10 +137,10 @@ export function DashboardHeader() {
               ))}
             </div>
 
-            <div className="px-4 py-2.5 border-t border-border">
+            <div className="px-4 py-3 border-t border-border bg-gray-50">
               <button
                 type="button"
-                className="text-xs text-primary hover:text-primary/80 transition-colors w-full text-center"
+                className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors w-full text-center"
               >
                 View all notifications
               </button>

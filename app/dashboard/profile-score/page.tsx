@@ -13,10 +13,9 @@ import {
   CartesianGrid,
 } from "recharts";
 
-
 const TRAJECTORY = [
-  { day: "Day 1",  score: 62 },
-  { day: "Day 7",  score: 67 },
+  { day: "Day 1", score: 62 },
+  { day: "Day 7", score: 67 },
   { day: "Day 14", score: 74 },
   { day: "Day 21", score: 80 },
   { day: "Day 28", score: 86 },
@@ -25,59 +24,78 @@ const TRAJECTORY = [
 ];
 
 const DIMENSIONS = [
-  { label: "Title Optimization",  weight: 20, score: 96 },
-  { label: "Overview Quality",    weight: 25, score: 91 },
+  { label: "Title Optimization", weight: 20, score: 96 },
+  { label: "Overview Quality", weight: 25, score: 91 },
   { label: "Skill Tags Coverage", weight: 15, score: 88 },
-  { label: "Portfolio Strength",  weight: 15, score: 94 },
-  { label: "Rate Positioning",    weight: 10, score: 82 },
-  { label: "Engagement Signals",  weight: 15, score: 97 },
+  { label: "Portfolio Strength", weight: 15, score: 94 },
+  { label: "Rate Positioning", weight: 10, score: 82 },
+  { label: "Engagement Signals", weight: 15, score: 97 },
 ];
 
-const SCORE_NOW   = 94;
+const SCORE_NOW = 94;
 const SCORE_START = 62;
-const SCORE_GAIN  = SCORE_NOW - SCORE_START;
+const SCORE_GAIN = SCORE_NOW - SCORE_START;
 
+function getCSSVariable(varName: string): string {
+  if (typeof window !== "undefined") {
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue(varName)
+      .trim();
+  }
+  return "";
+}
 
 function CircularScore({ score }: { score: number }) {
-  const size   = 180;
+  const [colors, setColors] = useState({ primary: "#0F6E56", secondary: "#1D9E75" });
+
+  useEffect(() => {
+    setColors({
+      primary: getCSSVariable("--color-primary") || "#0F6E56",
+      secondary: getCSSVariable("--color-secondary") || "#1D9E75",
+    });
+  }, []);
+
+  const size = 180;
   const stroke = 12;
-  const r      = (size - stroke) / 2;
-  const circ   = 2 * Math.PI * r;
-  const dash   = circ * (score / 100);
-  const gap    = circ - dash;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * (score / 100);
+  const gap = circ - dash;
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(224 30% 14%)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-border)" strokeWidth={stroke} />
         <circle
-          cx={size / 2} cy={size / 2} r={r}
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
           fill="none"
-          stroke="url(#scoreGrad)"
+          stroke={`url(#scoreGrad)`}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={`${dash} ${gap}`}
         />
         <defs>
           <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%"   stopColor="hsl(190 95% 55%)" />
-            <stop offset="100%" stopColor="hsl(265 85% 65%)" />
+            <stop offset="0%" stopColor={colors.primary} />
+            <stop offset="100%" stopColor={colors.secondary} />
           </linearGradient>
         </defs>
       </svg>
       <div className="absolute flex flex-col items-center justify-center">
-        <span className="text-6xl font-bold text-foreground leading-none" style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}>
+        <span className="text-6xl font-bold text-foreground leading-none" style={{ fontFamily: "Arial, sans-serif" }}>
           {score}
         </span>
-        <span className="text-sm text-[hsl(215_20%_55%)] mt-1">/ 100</span>
+        <span className="text-sm text-muted-foreground mt-1">/ 100</span>
       </div>
     </div>
   );
 }
 
-
 function DimensionRow({ label, weight, score, delay }: { label: string; weight: number; score: number; delay: number }) {
   const [width, setWidth] = useState(0);
+
   useEffect(() => {
     const t = setTimeout(() => setWidth(score), delay);
     return () => clearTimeout(t);
@@ -86,21 +104,21 @@ function DimensionRow({ label, weight, score, delay }: { label: string; weight: 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">{label}</span>
-          <span className="text-xs text-[hsl(215_20%_45%)]">w {weight}%</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-semibold text-foreground truncate">{label}</span>
+          <span className="text-xs text-muted-foreground shrink-0">w {weight}%</span>
         </div>
-        <span className="text-sm font-bold tabular-nums text-foreground">
-          {score}<span className="text-[hsl(215_20%_45%)] font-normal">/100</span>
+        <span className="text-sm font-bold tabular-nums text-foreground shrink-0 ml-2">
+          {score}<span className="text-muted-foreground font-normal">/100</span>
         </span>
       </div>
-      <div className="h-2 rounded-full bg-[hsl(224_30%_12%)] overflow-hidden">
+      <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-1000 ease-out"
           style={{
             width: `${width}%`,
-            background: "hsl(190 95% 55%)",
-            boxShadow: "0 0 12px hsl(190 95% 55% / 0.6)",
+            background: "var(--color-primary)",
+            boxShadow: "var(--shadow-glow-sm)",
             transitionDelay: `${delay}ms`,
           }}
         />
@@ -109,29 +127,29 @@ function DimensionRow({ label, weight, score, delay }: { label: string; weight: 
   );
 }
 
-
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="glass-card rounded-xl px-3 py-2 border border-[hsl(224_30%_18%)]">
-      <p className="text-xs text-[hsl(215_20%_55%)]">{label}</p>
-      <p className="text-sm font-bold text-[hsl(190_95%_55%)]">{payload[0].value}</p>
+    <div className="glass-card rounded-xl px-3 py-2 border border-border">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-bold text-primary">{payload[0].value}</p>
     </div>
   );
 }
-
 
 function MiniStat({ value, label, green }: { value: string; label: string; green?: boolean }) {
   return (
-    <div className="flex-1 rounded-xl bg-[hsl(224_30%_10%)] border border-[hsl(224_30%_16%)] px-4 py-3 flex flex-col items-center gap-0.5">
-      <span className="text-xl font-bold tabular-nums" style={{ color: green ? "hsl(145 70% 50%)" : "hsl(210 40% 98%)" }}>
+    <div className="flex-1 rounded-lg bg-gray-100 border border-border px-4 py-3 flex flex-col items-center gap-0.5">
+      <span
+        className="text-xl font-bold tabular-nums"
+        style={{ color: green ? "var(--color-primary)" : "var(--color-foreground)" }}
+      >
         {value}
       </span>
-      <span className="text-xs text-[hsl(215_20%_50%)]">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   );
 }
-
 
 export default function ProfileScorePage() {
   const [recomputing, setRecomputing] = useState(false);
@@ -142,29 +160,28 @@ export default function ProfileScorePage() {
   }
 
   return (
-    <div className="min-h-screen space-y-6">
+    <div className="min-h-screen space-y-6 p-4 sm:p-6">
+      {/* ↑ CHANGED: p-4 on mobile, p-6 on sm+ */}
 
-
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        {/* ↑ CHANGED: stack vertically on mobile, row on sm+ */}
         <div className="space-y-1">
-          <p className="text-xs font-bold tracking-[0.2em] uppercase text-[hsl(190_95%_55%)]">
+          <p className="text-xs font-bold tracking-widest uppercase text-primary">
             Profile Score
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}>
+          <h1 className="text-lg lg:text-3xl font-bold tracking-tight text-foreground" style={{ fontFamily: "Arial, sans-serif" }}>
             Your optimization score
           </h1>
-          <p className="text-[hsl(215_20%_65%)] max-w-xl text-sm">
+          <p className="text-muted-foreground max-w-xl text-sm">
             Composite score across 6 weighted dimensions, benchmarked against the top 10% in React &amp; TypeScript Development.
           </p>
         </div>
         <Button
           onClick={handleRecompute}
           disabled={recomputing}
-          className="flex items-center gap-2 rounded-full px-6 py-3 font-semibold text-sm"
+          className="flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md w-full sm:w-auto shrink-0"
+          // ↑ CHANGED: added justify-center, w-full sm:w-auto, shrink-0
           style={{
-            background: "linear-gradient(135deg, hsl(190 95% 55%), hsl(195 100% 65%))",
-            color: "hsl(224 47% 6%)",
-            boxShadow: "0 0 30px hsl(190 95% 55% / 0.35)",
             opacity: recomputing ? 0.7 : 1,
           }}
         >
@@ -173,43 +190,51 @@ export default function ProfileScorePage() {
         </Button>
       </div>
 
-      <hr className="border-[hsl(224_30%_16%)]" />
+      <hr className="border-border" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-5">
-
+      {/* Score Card + Trajectory Grid — no change, already uses lg: breakpoint */}
+      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
         <div className="glass-card glow-border rounded-2xl p-6 flex flex-col items-center gap-5">
           <CircularScore score={SCORE_NOW} />
           <div className="text-center space-y-1">
             <p className="text-base font-bold text-foreground">Top 3% in niche</p>
-            <p className="text-xs text-[hsl(215_20%_55%)]">
+            <p className="text-xs text-muted-foreground">
               Up from {SCORE_START} (Day 1) — gained {SCORE_GAIN} points in 42 days.
             </p>
           </div>
           <div className="flex gap-3 w-full">
             <MiniStat value={String(SCORE_START)} label="Start" />
-            <MiniStat value={`+${SCORE_GAIN}`}    label="Gain"  green />
-            <MiniStat value={String(SCORE_NOW)}   label="Now"  />
+            <MiniStat value={`+${SCORE_GAIN}`} label="Gain" green />
+            <MiniStat value={String(SCORE_NOW)} label="Now" />
           </div>
         </div>
 
         <div className="glass-card glow-border rounded-2xl p-6 space-y-3">
           <div>
             <p className="text-sm font-bold text-foreground">42-day trajectory</p>
-            <p className="text-xs text-[hsl(215_20%_55%)]">Score recomputed daily as new market signal arrives</p>
+            <p className="text-xs text-muted-foreground">Score recomputed daily as new market signal arrives</p>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={TRAJECTORY} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="areaGradSm" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="hsl(190 95% 55%)" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="hsl(190 95% 55%)" stopOpacity={0.02} />
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="day" tick={{ fill: "hsl(215 20% 50%)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[50, 100]} ticks={[50, 65, 80, 95, 100]} tick={{ fill: "hsl(215 20% 50%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="day" tick={{ fill: "var(--color-muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis domain={[50, 100]} ticks={[50, 65, 80, 95, 100]} tick={{ fill: "var(--color-muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} />
-                <Area type="monotone" dataKey="score" stroke="hsl(190 95% 55%)" strokeWidth={2} fill="url(#areaGradSm)" dot={false} activeDot={{ r: 4, fill: "hsl(190 95% 55%)", strokeWidth: 0 }} />
+                <Area
+                  type="monotone"
+                  dataKey="score"
+                  stroke="var(--color-primary)"
+                  strokeWidth={2}
+                  fill="url(#areaGradSm)"
+                  dot={false}
+                  activeDot={{ r: 4, fill: "var(--color-primary)", strokeWidth: 0 }}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -219,10 +244,10 @@ export default function ProfileScorePage() {
       <div className="glass-card glow-border rounded-2xl p-6 space-y-4">
         <div className="flex items-start justify-between">
           <div className="space-y-0.5">
-            <p className="text-base font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}>
+            <p className="text-base font-bold text-foreground" style={{ fontFamily: "Arial, sans-serif" }}>
               Profile Score Evolution
             </p>
-            <p className="text-xs text-[hsl(215_20%_50%)]">
+            <p className="text-xs text-muted-foreground">
               Trailing 42 days · Updated 2h ago
             </p>
           </div>
@@ -233,25 +258,26 @@ export default function ProfileScorePage() {
             <AreaChart data={TRAJECTORY} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="areaGradLg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="hsl(190 95% 55%)" stopOpacity={0.4}  />
-                  <stop offset="95%" stopColor="hsl(190 95% 55%)" stopOpacity={0.02} />
+                  <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 vertical={false}
-                stroke="hsl(224 30% 16% / 0.6)"
+                stroke="var(--color-border)"
                 strokeDasharray="4 4"
+                opacity={0.5}
               />
               <XAxis
                 dataKey="day"
-                tick={{ fill: "hsl(215 20% 48%)", fontSize: 11 }}
+                tick={{ fill: "var(--color-muted-foreground)", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 domain={[50, 100]}
                 ticks={[50, 65, 80, 95, 100]}
-                tick={{ fill: "hsl(215 20% 48%)", fontSize: 11 }}
+                tick={{ fill: "var(--color-muted-foreground)", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
@@ -259,11 +285,11 @@ export default function ProfileScorePage() {
               <Area
                 type="monotone"
                 dataKey="score"
-                stroke="hsl(190 95% 60%)"
+                stroke="var(--color-primary)"
                 strokeWidth={2.5}
                 fill="url(#areaGradLg)"
                 dot={false}
-                activeDot={{ r: 5, fill: "hsl(190 95% 60%)", strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: "var(--color-primary)", strokeWidth: 0 }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -271,12 +297,14 @@ export default function ProfileScorePage() {
       </div>
 
       <div className="glass-card glow-border rounded-2xl p-6 space-y-5">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          {/* ↑ CHANGED: flex-wrap + gap-2 so badge wraps cleanly on narrow screens */}
           <div className="space-y-0.5">
             <p className="text-sm font-bold text-foreground">Score breakdown</p>
-            <p className="text-xs text-[hsl(215_20%_55%)]">6 weighted dimensions per the model spec</p>
+            <p className="text-xs text-muted-foreground">6 weighted dimensions per the model spec</p>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-[hsl(224_30%_18%)] px-3 py-1.5 text-xs text-[hsl(215_20%_55%)]">
+          <div className="flex items-center gap-1.5 rounded-full border border-border px-2 sm:px-3 py-1.5 text-xs text-muted-foreground bg-gray-50 whitespace-nowrap">
+            {/* ↑ CHANGED: px-2 on mobile, px-3 on sm+; whitespace-nowrap to prevent internal wrapping */}
             <Info size={12} />
             Weights retrained bi-weekly
           </div>
@@ -287,7 +315,6 @@ export default function ProfileScorePage() {
           ))}
         </div>
       </div>
-
     </div>
   );
 }

@@ -6,30 +6,27 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-
 function SectionCard({ children, danger }: { children: React.ReactNode; danger?: boolean }) {
   return (
     <div
       className="glass-card rounded-2xl p-6 space-y-5"
-      style={danger ? { border: "1px solid hsl(0 75% 45% / 0.4)" } : undefined}
+      style={danger ? { borderColor: "var(--color-destructive)", borderWidth: "1px", borderOpacity: "0.4" } : undefined}
     >
       {children}
     </div>
   );
 }
 
-
 function SectionHeader({ title, subtitle, danger }: { title: string; subtitle: string; danger?: boolean }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-sm font-bold" style={{ color: danger ? "hsl(0 75% 60%)" : "hsl(210 40% 98%)" }}>
+      <p className="text-sm font-bold" style={{ color: danger ? "var(--color-destructive)" : "var(--color-foreground)" }}>
         {title}
       </p>
-      <p className="text-xs text-[hsl(215_20%_50%)]">{subtitle}</p>
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
     </div>
   );
 }
-
 
 function ToggleRow({
   label,
@@ -43,38 +40,43 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-6 py-4 border-t border-[hsl(224_30%_14%)] first:border-0 first:pt-0">
+    <div className="flex items-center justify-between gap-6 py-4 border-t border-border first:border-0 first:pt-0">
       <div className="space-y-0.5">
         <p className="text-sm font-semibold text-foreground">{label}</p>
-        <p className="text-xs text-[hsl(215_20%_48%)]">{description}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-<Switch
-  checked={checked}
-  onCheckedChange={onChange}
-  className="
-    shrink-0 w-11 h-6 p-1 rounded-full
-    border border-gray-500 bg-muted
-    transition-all duration-300
+      <Switch
+        checked={checked}
+        onCheckedChange={onChange}
+        className="
+          shrink-0 w-11 h-6 p-1 rounded-full
+          border border-gray-400 bg-muted
+          transition-all duration-300
 
-    data-[state=checked]:bg-[hsl(190_95%_55%)]
+          data-[state=checked]:bg-primary
 
-    [&>span]:block
-    [&>span]:w-4 [&>span]:h-4
-    [&>span]:rounded-full
-    [&>span]:bg-white
-    [&>span]:shadow-md
-    [&>span]:transition-transform [&>span]:duration-300
+          [&>span]:block
+          [&>span]:w-4 [&>span]:h-4
+          [&>span]:rounded-full
+          [&>span]:bg-white
+          [&>span]:shadow-md
+          [&>span]:transition-transform [&>span]:duration-300
 
-    data-[state=checked]:[&>span]:translate-x-3
-    data-[state=unchecked]:[&>span]:translate-x-0
-  "
-/>
+          data-[state=checked]:[&>span]:translate-x-3
+          data-[state=unchecked]:[&>span]:translate-x-0
+        "
+      />
     </div>
   );
 }
 
-
-function Field({ label, value, onChange, placeholder, type = "text" }: {
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}: {
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -89,71 +91,67 @@ function Field({ label, value, onChange, placeholder, type = "text" }: {
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-[hsl(224_30%_10%)] border-[hsl(224_30%_16%)] text-foreground placeholder:text-[hsl(215_20%_38%)] rounded-xl focus-visible:ring-[hsl(190_95%_55%/0.4)] h-11"
+        className="bg-white border-border text-foreground placeholder:text-muted-foreground rounded-xl focus-visible:ring-primary/20 h-11"
       />
     </div>
   );
 }
 
-
 export default function SettingsPage() {
-  
-  const [fullName,    setFullName]    = useState("Alex Morgan");
-  const [handle,      setHandle]      = useState("@alexmorgan");
-  const [niche,       setNiche]       = useState("React & TypeScript Development");
-  const [hourlyRate,  setHourlyRate]  = useState("95");
+  const [fullName, setFullName] = useState("Alex Morgan");
+  const [handle, setHandle] = useState("@alexmorgan");
+  const [niche, setNiche] = useState("React & TypeScript Development");
+  const [hourlyRate, setHourlyRate] = useState("95");
 
-  
-  const [autoApply,   setAutoApply]   = useState(true);
-  const [rankingSim,  setRankingSim]  = useState(true);
-  const [kwAlerts,    setKwAlerts]    = useState(true);
-  const [rateAdjust,  setRateAdjust]  = useState(false);
+  const [autoApply, setAutoApply] = useState(true);
+  const [rankingSim, setRankingSim] = useState(true);
+  const [kwAlerts, setKwAlerts] = useState(true);
+  const [rateAdjust, setRateAdjust] = useState(false);
 
-  
-  const [shareWins,   setShareWins]   = useState(true);
-  const [shareRank,   setShareRank]   = useState(true);
+  const [shareWins, setShareWins] = useState(true);
+  const [shareRank, setShareRank] = useState(true);
   const [shareEarnings, setShareEarnings] = useState(false);
 
   function handleSave() {
-    
+    // Handle save logic
   }
 
   function handleCancel() {
-    
+    // Handle cancel logic
   }
 
   return (
-    <div className="min-h-screen space-y-6">
+    <div className="min-h-screen space-y-6 p-6">
+      {/* Header */}
       <div className="space-y-1">
-        <p className="text-xs font-bold tracking-[0.2em] uppercase text-[hsl(190_95%_55%)]">
+        <p className="text-xs font-bold tracking-widest uppercase text-primary">
           Account
         </p>
         <h1
-          className="text-2xl font-bold tracking-tight text-foreground"
-          style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
+          className="text-3xl font-bold tracking-tight text-foreground"
+          style={{ fontFamily: "Arial, sans-serif" }}
         >
           Settings
         </h1>
-        <p className="text-[hsl(215_20%_55%)] text-sm">
+        <p className="text-muted-foreground text-sm">
           Manage your profile data, optimization preferences, and outcome sharing.
         </p>
       </div>
 
-      <hr className="border-[hsl(224_30%_16%)]" />
+      <hr className="border-border" />
 
+      {/* Profile Section */}
       <SectionCard>
-        <SectionHeader
-          title="Profile"
-          subtitle="Used by the engine to personalize recommendations"
-        />
+        <SectionHeader title="Profile" subtitle="Used by the engine to personalize recommendations" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Full name"        value={fullName}   onChange={setFullName}   placeholder="Alex Morgan" />
-          <Field label="Upwork handle"    value={handle}     onChange={setHandle}     placeholder="@handle" />
-          <Field label="Primary niche"    value={niche}      onChange={setNiche}      placeholder="e.g. React & TypeScript" />
+          <Field label="Full name" value={fullName} onChange={setFullName} placeholder="Alex Morgan" />
+          <Field label="Upwork handle" value={handle} onChange={setHandle} placeholder="@handle" />
+          <Field label="Primary niche" value={niche} onChange={setNiche} placeholder="e.g. React & TypeScript" />
           <Field label="Hourly rate (USD)" value={hourlyRate} onChange={setHourlyRate} placeholder="95" type="number" />
         </div>
       </SectionCard>
 
+      {/* Optimization Preferences Section */}
       <SectionCard>
         <SectionHeader
           title="Optimization preferences"
@@ -187,6 +185,7 @@ export default function SettingsPage() {
         </div>
       </SectionCard>
 
+      {/* Data Sharing Section */}
       <SectionCard>
         <SectionHeader
           title="Outcome data sharing"
@@ -214,6 +213,7 @@ export default function SettingsPage() {
         </div>
       </SectionCard>
 
+      {/* Danger Zone */}
       <SectionCard danger>
         <SectionHeader
           title="Danger zone"
@@ -221,19 +221,16 @@ export default function SettingsPage() {
           danger
         />
         <div className="flex items-center gap-3">
-          <button
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-foreground border border-[hsl(224_30%_20%)] hover:bg-[hsl(224_30%_14%)] transition-colors"
-          >
+          <button className="px-4 py-2 rounded-xl text-sm font-semibold text-foreground border border-border hover:bg-gray-100 transition-colors">
             Export all my data
           </button>
           <button
-            className="px-4 py-2 rounded-xl text-sm font-semibold border transition-colors"
+            className="px-4 py-2 rounded-xl text-sm font-semibold border transition-colors text-destructive"
             style={{
-              color: "hsl(0 75% 60%)",
-              borderColor: "hsl(0 75% 45% / 0.5)",
+              borderColor: "var(--color-destructive)",
               background: "transparent",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "hsl(0 75% 55% / 0.08)")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-destructive) / 0.08")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
             Delete account
@@ -241,26 +238,21 @@ export default function SettingsPage() {
         </div>
       </SectionCard>
 
+      {/* Action Buttons */}
       <div className="flex items-center justify-end gap-4 pb-8">
         <button
           onClick={handleCancel}
-          className="text-sm font-semibold text-[hsl(215_20%_60%)] hover:text-foreground transition-colors"
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
         >
           Cancel
         </button>
         <Button
           onClick={handleSave}
-          className="rounded-xl px-6 font-semibold text-sm h-10"
-          style={{
-            background: "linear-gradient(135deg, hsl(190 95% 55%), hsl(195 100% 65%))",
-            color: "hsl(224 47% 6%)",
-            boxShadow: "0 0 24px hsl(190 95% 55% / 0.35)",
-          }}
+          className="rounded-xl px-6 font-semibold text-sm h-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md"
         >
           Save changes
         </Button>
       </div>
-
     </div>
   );
 }

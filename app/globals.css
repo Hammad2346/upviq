@@ -3,53 +3,56 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: hsl(224 47% 6%);
-  --color-foreground: hsl(210 40% 98%);
-  --color-card: hsl(224 39% 9%);
-  --color-card-foreground: hsl(210 40% 98%);
-  --color-popover: hsl(224 39% 9%);
-  --color-popover-foreground: hsl(210 40% 98%);
-  --color-primary: hsl(190 95% 55%);
-  --color-primary-foreground: hsl(224 47% 6%);
-  --color-secondary: hsl(224 30% 14%);
-  --color-secondary-foreground: hsl(210 40% 98%);
-  --color-muted: hsl(224 25% 12%);
-  --color-muted-foreground: hsl(215 20% 65%);
-  --color-accent: hsl(265 85% 65%);
-  --color-accent-foreground: hsl(210 40% 98%);
-  --color-destructive: hsl(0 75% 60%);
-  --color-destructive-foreground: hsl(210 40% 98%);
-  --color-border: hsl(224 30% 16%);
-  --color-input: hsl(224 30% 16%);
-  --color-ring: hsl(190 95% 55%);
+  --color-background: #ffffff;
+  --color-foreground: #000000;
+  --color-card: #f1efe8;
+  --color-card-foreground: #000000;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #000000;
+  --color-primary: #0F6E56;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1D9E75;
+  --color-secondary-foreground: #ffffff;
+  --color-muted: #5F5E5A;
+  --color-muted-foreground: #666666;
+  --color-accent: #E1F5EE;
+  --color-accent-foreground: #0F6E56;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #d1d5db;
+  --color-input: #f3f4f6;
+  --color-ring: #0F6E56;
   --radius: 0.875rem;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+  --font-sans: 'Arial', system-ui, sans-serif;
+  --font-heading: 'Arial', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
 /* CSS custom properties for things outside @theme */
 :root {
-  --primary-glow: hsl(195 100% 65%);
-  --gradient-hero: radial-gradient(ellipse at top, hsl(190 95% 55% / 0.18), transparent 60%),
-                   radial-gradient(ellipse at bottom right, hsl(265 85% 65% / 0.12), transparent 50%),
-                   linear-gradient(180deg, hsl(224 47% 6%), hsl(224 47% 4%));
-  --gradient-primary: linear-gradient(135deg, hsl(190 95% 55%), hsl(195 100% 65%));
-  --gradient-accent: linear-gradient(135deg, hsl(190 95% 55%), hsl(265 85% 65%));
-  --gradient-card: linear-gradient(180deg, hsl(224 39% 11% / 0.8), hsl(224 39% 8% / 0.4));
-  --gradient-text: linear-gradient(135deg, hsl(210 40% 98%), hsl(190 95% 75%));
-  --gradient-border: linear-gradient(135deg, hsl(190 95% 55% / 0.4), hsl(265 85% 65% / 0.2));
-  --shadow-glow: 0 0 60px hsl(190 95% 55% / 0.35);
-  --shadow-glow-sm: 0 0 30px hsl(190 95% 55% / 0.25);
-  --shadow-elegant: 0 20px 60px -20px hsl(224 47% 2% / 0.8);
-  --shadow-card: 0 8px 32px -8px hsl(224 47% 2% / 0.6);
+  --primary-glow: #0F6E56;
+  --gradient-hero: radial-gradient(ellipse at top, #0F6E56 / 0.12, transparent 60%),
+                   radial-gradient(ellipse at bottom right, #1D9E75 / 0.08, transparent 50%),
+                   linear-gradient(180deg, #ffffff, #f9f8f5);
+  --gradient-primary: linear-gradient(135deg, #0F6E56, #1D9E75);
+  --gradient-accent: linear-gradient(135deg, #1D9E75, #5DCAA5);
+  --gradient-card: linear-gradient(180deg, #f1efe8 / 0.9, #ffffff / 0.6);
+  --gradient-text: linear-gradient(135deg, #0F6E56, #1D9E75);
+  --gradient-border: linear-gradient(135deg, #0F6E56 / 0.3, #1D9E75 / 0.15);
+  --shadow-glow: 0 0 60px #0F6E56 / 0.2;
+  --shadow-glow-sm: 0 0 30px #0F6E56 / 0.15;
+  --shadow-elegant: 0 20px 60px -20px #000000 / 0.1;
+  --shadow-card: 0 8px 32px -8px #000000 / 0.08;
+  --gradient-competition-high: linear-gradient(90deg, #dc2626, #ea580c);
+  --gradient-competition-medium: linear-gradient(90deg, #f59e0b, #d97706);
+  --gradient-competition-low: linear-gradient(90deg, #10b981, #059669);
   --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
-  border-color: hsl(224 30% 16%);
+  border-color: #d1d5db;
 }
 
 html {
@@ -57,20 +60,21 @@ html {
 }
 
 body {
-  background-color: hsl(224 47% 6%);
-  color: hsl(210 40% 98%);
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #ffffff;
+  color: #000000;
+  font-family: 'Arial', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-image:
-    radial-gradient(at 0% 0%, hsl(190 95% 55% / 0.06) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsl(265 85% 65% / 0.05) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, #0F6E56 / 0.04 0px, transparent 50%),
+    radial-gradient(at 100% 100%, #1D9E75 / 0.03 0px, transparent 50%);
   background-attachment: fixed;
 }
 
 h1, h2, h3, h4, h5 {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'Arial', system-ui, sans-serif;
   letter-spacing: -0.02em;
+  color: #000000;
 }
 
 /* Utility classes */
@@ -92,7 +96,7 @@ h1, h2, h3, h4, h5 {
   background: var(--gradient-card);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid hsl(224 30% 16%);
+  border: 1px solid #d1d5db;
   box-shadow: var(--shadow-card);
 }
 
@@ -115,8 +119,8 @@ h1, h2, h3, h4, h5 {
 
 .grid-bg {
   background-image:
-    linear-gradient(hsl(224 30% 16% / 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(224 30% 16% / 0.5) 1px, transparent 1px);
+    linear-gradient(#d1d5db / 0.3 1px, transparent 1px),
+    linear-gradient(90deg, #d1d5db / 0.3 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
 }
@@ -130,7 +134,7 @@ h1, h2, h3, h4, h5 {
   position: absolute;
   inset: -4px;
   border-radius: 9999px;
-  background: hsl(190 95% 55% / 0.5);
+  background: #0F6E56 / 0.4;
   animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -155,6 +159,6 @@ h1, h2, h3, h4, h5 {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 30px hsl(190 95% 55% / 0.3); }
-  50% { box-shadow: 0 0 60px hsl(190 95% 55% / 0.5); }
+  0%, 100% { box-shadow: 0 0 30px #0F6E56 / 0.2; }
+  50% { box-shadow: 0 0 60px #0F6E56 / 0.35; }
 }
