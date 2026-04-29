@@ -38,7 +38,7 @@ const placeholderNotifications = [
 ]
 
 export function DashboardHeader() {
-  const [engineLive, setEngineLive] = useState(true)
+  const [engineLive, setEngineLive] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [search, setSearch] = useState("")
 
@@ -47,7 +47,7 @@ export function DashboardHeader() {
   return (
     <header className="h-14 border-b border-border flex items-center gap-3 px-4 bg-white sticky top-0 z-10">
 
-      <SidebarTrigger className="text-muted-foreground hover:text-foreground shrink-0" />
+      <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-gray-300 shrink-0" />
 
       <SearchCommand />
 

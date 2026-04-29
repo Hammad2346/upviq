@@ -180,7 +180,7 @@ export default function KeywordsPage() {
         No keywords match your filter.
       </div>
     ) : (<div className="h-[400px] overflow-scroll">
-      {filtered.map((kw, i) =>(<KeywordMobileCard kw={kw} />))}
+      {filtered.map((kw, i) =>(<KeywordMobileCard key={i} kw={kw} />))}
 
       </div>)
       
