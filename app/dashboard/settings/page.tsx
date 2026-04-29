@@ -49,20 +49,19 @@ function ToggleRow({
         checked={checked}
         onCheckedChange={onChange}
         className="
-          shrink-0 w-11 h-6 p-1 rounded-full
+          shrink-0 w-11 h-6 rounded-full
           border border-gray-400 bg-muted
           transition-all duration-300
 
           data-[state=checked]:bg-primary
 
           [&>span]:block
-          [&>span]:w-4 [&>span]:h-4
+          [&>span]:w-6 [&>span]:h-6
           [&>span]:rounded-full
           [&>span]:bg-white
-          [&>span]:shadow-md
           [&>span]:transition-transform [&>span]:duration-300
 
-          data-[state=checked]:[&>span]:translate-x-3
+          data-[state=checked]:[&>span]:translate-x-4
           data-[state=unchecked]:[&>span]:translate-x-0
         "
       />

@@ -13,6 +13,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import {
   Star,
@@ -53,6 +54,7 @@ export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [user] = useAuthState(auth)
+  const { open } = useSidebar()
 
   async function handleLogout() {
     await logoutUser()
@@ -60,7 +62,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="bg-white border-r border-border">
+    <Sidebar className="bg-white border-r border-border" collapsible="icon">
 
       <div className="px-4 h-14 border-b border-border flex items-center justify-center gap-3">
         <Image
@@ -114,31 +116,43 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-4">
-
-        <div className="flex items-center px-3 py-3 rounded-lg bg-accent/50 border border-primary/10 mb-3">
-          <div className="h-9 w-9 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0 flex-none">
+      <SidebarFooter className="border-t border-border flex-col gap-2 items-center justify-center">
+        <div
+          className={`
+            flex rounded-lg bg-accent/50 border border-primary/10 transition-all duration-200 w-full
+            ${open ? "items-center px-3 py-2.5 gap-3" : "flex-col items-center p-0 gap-1 bg-white border-none"}
+          `}
+        >
+          <div className="h-9 w-9 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0">
             <span className="text-xs font-bold text-primary">
               {user?.email?.charAt(0).toUpperCase() ?? "U"}
             </span>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-foreground truncate">
-              {user?.displayName ?? "User"}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {user?.email ?? ""}
-            </p>
-          </div>
+          {open && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground truncate">
+                {user?.displayName ?? "User"}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {user?.email ?? ""}
+              </p>
+            </div>
+          )}
         </div>
-
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-red-50 transition-all duration-200"
+          title={!open ? "Log out" : ""}
+          className={`
+            flex items-center rounded-lg font-medium transition-all duration-200 shrink-0
+            ${open
+              ? "w-full px-3 py-2.5 gap-3 justify-start text-sm text-muted-foreground hover:text-destructive hover:bg-red-50"
+              : "w-9 h-9 mx-auto text-muted-foreground hover:text-destructive hover:bg-red-50 justify-center"
+            }
+          `}
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          <span>Log out</span>
+          {open && <span>Log out</span>}
         </button>
       </SidebarFooter>
     </Sidebar>
