@@ -10,6 +10,7 @@ import DemandBar from "@/components/keyword/demand-bar";
 import CompetitionBar from "@/components/keyword/competition-bar";
 import TrendIcon from "@/components/keyword/trend-icon";
 import OpportunityBadge from "@/components/keyword/opportunity-badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Opportunity = "High" | "Medium" | "Low";
 type TrendDir = "up" | "down" | "flat";
@@ -39,6 +40,7 @@ export default function KeywordsPage() {
   const [query, setQuery] = useState("");
   const [keywords, setKeywords] = useState<Keyword[]>(INITIAL_KEYWORDS);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const isMobile=useIsMobile()
 
   function addKeyword(name: string) {
     const demand = Math.floor(Math.random() * 40) + 40;
@@ -128,48 +130,95 @@ export default function KeywordsPage() {
 
 <div className="glass-card rounded-2xl overflow-hidden glow-border">
   <div className="overflow-x-auto">
-    <div className="grid grid-cols-[200px_140px_140px_80px_70px_110px] gap-4 px-6 py-4 border-b border-border bg-gray-50 min-w-[845px]">
+    <div className="grid grid-cols-6 px-6 py-4 gap-4 border-b border-border bg-gray-50 min-w-[720px]">
       {["Keyword", "Demand", "Competition", "Pos.", "Trend", "Opportunity"].map((col) => (
-        <span key={col} className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
+        <span key={col} className="text-xs font-bold text-muted-foreground uppercase flex justify-center">
           {col}
         </span>
       ))}
     </div>
 
     {filtered.length === 0 ? (
-      <div className="px-6 py-12 text-center text-muted-foreground text-sm min-w-[780px]">
+      <div className="px-6 py-12 text-center text-muted-foreground text-sm min-w-[720px]">
         No keywords match your filter.
       </div>
     ) : (
       filtered.map((kw, i) => (
         <div
           key={kw.id}
-          className="grid grid-cols-[200px_140px_140px_80px_70px_110px] gap-4 items-center px-6 py-3.5 transition-colors hover:bg-gray-50 min-w-[780px]"
+          className="grid grid-cols-6 gap-4 items-center px-6 py-3.5 transition-colors hover:bg-gray-50 min-w-[720px]"
           style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--color-border)" : undefined }}
         >
           <span
-            className="text-xs font-medium text-foreground tracking-wide truncate"
+            className="text-xs font-medium text-foreground flex justify-center"
             style={{ fontFamily: "JetBrains Mono, monospace" }}
           >
             {kw.name}
           </span>
           <DemandBar value={kw.demand} />
           <CompetitionBar value={kw.competition} />
-          <span className="text-xs font-bold text-foreground tabular-nums">
+          <span className="text-xs font-bold flex justify-center text-foreground tabular-nums">
             {kw.position !== null ? `#${kw.position}` : "—"}
           </span>
+          <div className="flex justify-center">
           <TrendIcon dir={kw.trend} />
+          </div>
           <OpportunityBadge level={kw.opportunity} />
         </div>
       ))
     )}
   </div>
 </div>
+
       <AddKeywordDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         onAdd={addKeyword}
       />
+    </div>
+  );
+}
+
+function KeywordMobileCard({ kw }: { kw: Keyword }) {
+  return (
+    <div className="p-4 border border-border rounded-lg mb-3 bg-white hover:bg-gray-50 transition-colors">
+      <div className="flex justify-between items-start gap-2 mb-3">
+        <span
+          className="font-mono text-sm font-medium text-foreground flex-1 break-words"
+          style={{ fontFamily: "JetBrains Mono, monospace" }}
+        >
+          {kw.name}
+        </span>
+        <OpportunityBadge level={kw.opportunity} />
+      </div>
+ 
+      <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
+        <div>
+          <span className="text-muted-foreground block mb-1 text-xs font-medium">Demand</span>
+          <DemandBar value={kw.demand} />
+          <span className="text-foreground font-semibold mt-1 block">{kw.demand}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground block mb-1 text-xs font-medium">Competition</span>
+          <CompetitionBar value={kw.competition} />
+          <span className="text-foreground font-semibold mt-1 block">{kw.competition}</span>
+        </div>
+      </div>
+ 
+      <div className="flex items-center justify-between text-xs">
+        <div>
+          <span className="text-muted-foreground block text-xs font-medium">Position</span>
+          <p className="font-bold text-foreground mt-1">
+            {kw.position !== null ? `#${kw.position}` : "—"}
+          </p>
+        </div>
+        <div className="text-right">
+          <span className="text-muted-foreground block text-xs font-medium">Trend</span>
+          <p className="text-lg mt-1">
+            <TrendIcon dir={kw.trend} />
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

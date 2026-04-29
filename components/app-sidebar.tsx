@@ -116,7 +116,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-border p-4">
 
-        <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-accent/50 border border-primary/10 mb-3">
+        <div className="flex items-center px-3 py-3 rounded-lg bg-accent/50 border border-primary/10 mb-3">
           <div className="h-9 w-9 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0 flex-none">
             <span className="text-xs font-bold text-primary">
               {user?.email?.charAt(0).toUpperCase() ?? "U"}
