@@ -122,7 +122,6 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen space-y-6 p-6">
-      {/* Header */}
       <div className="space-y-1">
         <p className="text-xs font-bold tracking-widest uppercase text-primary">
           Account
@@ -140,7 +139,7 @@ export default function SettingsPage() {
 
       <hr className="border-border" />
 
-      {/* Profile Section */}
+
       <SectionCard>
         <SectionHeader title="Profile" subtitle="Used by the engine to personalize recommendations" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -151,7 +150,7 @@ export default function SettingsPage() {
         </div>
       </SectionCard>
 
-      {/* Optimization Preferences Section */}
+
       <SectionCard>
         <SectionHeader
           title="Optimization preferences"
@@ -185,7 +184,6 @@ export default function SettingsPage() {
         </div>
       </SectionCard>
 
-      {/* Data Sharing Section */}
       <SectionCard>
         <SectionHeader
           title="Outcome data sharing"
@@ -213,7 +211,6 @@ export default function SettingsPage() {
         </div>
       </SectionCard>
 
-      {/* Danger Zone */}
       <SectionCard danger>
         <SectionHeader
           title="Danger zone"
@@ -238,7 +235,6 @@ export default function SettingsPage() {
         </div>
       </SectionCard>
 
-      {/* Action Buttons */}
       <div className="flex items-center justify-end gap-4 pb-8">
         <button
           onClick={handleCancel}

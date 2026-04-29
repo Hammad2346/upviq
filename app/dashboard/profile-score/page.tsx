@@ -161,10 +161,10 @@ export default function ProfileScorePage() {
 
   return (
     <div className="min-h-screen space-y-6 p-4 sm:p-6">
-      {/* ↑ CHANGED: p-4 on mobile, p-6 on sm+ */}
+
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        {/* ↑ CHANGED: stack vertically on mobile, row on sm+ */}
+
         <div className="space-y-1">
           <p className="text-xs font-bold tracking-widest uppercase text-primary">
             Profile Score
@@ -180,7 +180,7 @@ export default function ProfileScorePage() {
           onClick={handleRecompute}
           disabled={recomputing}
           className="flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md w-full sm:w-auto shrink-0"
-          // ↑ CHANGED: added justify-center, w-full sm:w-auto, shrink-0
+
           style={{
             opacity: recomputing ? 0.7 : 1,
           }}
@@ -191,8 +191,6 @@ export default function ProfileScorePage() {
       </div>
 
       <hr className="border-border" />
-
-      {/* Score Card + Trajectory Grid — no change, already uses lg: breakpoint */}
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
         <div className="glass-card glow-border rounded-2xl p-6 flex flex-col items-center gap-5">
           <CircularScore score={SCORE_NOW} />
@@ -298,13 +296,13 @@ export default function ProfileScorePage() {
 
       <div className="glass-card glow-border rounded-2xl p-6 space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          {/* ↑ CHANGED: flex-wrap + gap-2 so badge wraps cleanly on narrow screens */}
+
           <div className="space-y-0.5">
             <p className="text-sm font-bold text-foreground">Score breakdown</p>
             <p className="text-xs text-muted-foreground">6 weighted dimensions per the model spec</p>
           </div>
           <div className="flex items-center gap-1.5 rounded-full border border-border px-2 sm:px-3 py-1.5 text-xs text-muted-foreground bg-gray-50 whitespace-nowrap">
-            {/* ↑ CHANGED: px-2 on mobile, px-3 on sm+; whitespace-nowrap to prevent internal wrapping */}
+
             <Info size={12} />
             Weights retrained bi-weekly
           </div>

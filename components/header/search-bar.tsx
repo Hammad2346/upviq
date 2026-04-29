@@ -32,7 +32,7 @@ export default function SearchCommand() {
 
       <div
         onClick={() => setOpen(true)}
-        className="relative flex-1 max-w-md cursor-pointer group"
+        className="relative bg-white flex-1 max-w-md cursor-pointer group"
       >
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none group-hover:text-primary transition-colors" />
         <input

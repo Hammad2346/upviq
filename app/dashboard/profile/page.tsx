@@ -131,7 +131,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen space-y-8 p-6">
-      {/* Header */}
       <div className="space-y-1">
         <p className="text-xs font-bold tracking-widest uppercase text-primary">
           Profile Analyzer
@@ -149,7 +148,6 @@ export default function ProfilePage() {
 
       <hr className="border-border" />
 
-      {/* Analysis Input Card */}
       <div
         className="glass-card glow-border rounded-2xl p-8 flex flex-col items-center gap-6"
         style={{
@@ -157,7 +155,7 @@ export default function ProfilePage() {
             "radial-gradient(ellipse at top, var(--color-primary) / 0.06, transparent 60%), var(--gradient-card)",
         }}
       >
-        {/* Icon */}
+
         <div
           className="w-14 h-14 rounded-2xl flex items-center justify-center"
           style={{
@@ -168,7 +166,6 @@ export default function ProfilePage() {
           <Search size={22} className="text-primary" />
         </div>
 
-        {/* Instructions */}
         <div className="text-center space-y-1">
           <p className="text-base font-bold text-foreground" style={{ fontFamily: "Arial, sans-serif" }}>
             Enter a profile URL
@@ -178,7 +175,6 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* Input & Button */}
         <div className="flex w-full max-w-2xl gap-3">
           <div className="relative flex-1">
             <Link2 size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -206,7 +202,6 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        {/* Demo Link */}
         {!analyzed && (
           <button
             onClick={() => {
@@ -220,13 +215,11 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Analysis Results */}
+
       {analyzed && (
         <div className="space-y-5">
-          {/* Profile Header Card */}
           <div className="glass-card glow-border rounded-2xl p-6">
             <div className="flex flex-col sm:flex-row gap-5">
-              {/* Avatar */}
               <div className="shrink-0">
                 <img
                   src={profile.avatarUrl}
@@ -239,7 +232,6 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {/* Profile Info */}
               <div className="flex-1 space-y-2.5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -263,7 +255,6 @@ export default function ProfilePage() {
                   </a>
                 </div>
 
-                {/* Meta Info */}
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <MapPin size={12} /> {profile.location}
@@ -282,7 +273,6 @@ export default function ProfilePage() {
                   </span>
                 </div>
 
-                {/* Badges */}
                 <div className="flex flex-wrap gap-2">
                   {profile.hasTopRated && (
                     <Badge
@@ -307,8 +297,6 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatBox label="Hourly Rate" value={`$${profile.rate}/hr`} />
             <StatBox label="Job Success" value={`${profile.jobSuccess}%`} highlight />
@@ -316,7 +304,7 @@ export default function ProfilePage() {
             <StatBox label="Mobile Impact" value="10M+" highlight />
           </div>
 
-          {/* Skills Card */}
+
           <div className="glass-card glow-border rounded-2xl p-6 space-y-4">
             <div className="space-y-0.5">
               <p className="text-sm font-bold text-foreground">Skills</p>
@@ -331,7 +319,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Overview Card */}
+
           <div className="glass-card glow-border rounded-2xl p-6 space-y-4">
             <div className="space-y-0.5">
               <p className="text-sm font-bold text-foreground">Overview</p>

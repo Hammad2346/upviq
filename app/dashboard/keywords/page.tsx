@@ -77,18 +77,15 @@ export default function KeywordsPage() {
 
   return (
     <div className="min-h-screen space-y-6 p-4 sm:p-6">
-      {/* ↑ CHANGED: p-4 on mobile, p-6 on sm+ */}
-
-      {/* Header Section */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        {/* ↑ CHANGED: stack vertically on mobile, row on sm+ */}
+
         <div className="space-y-1">
           <p className="text-xs font-bold tracking-widest uppercase text-primary">
             Niche Intelligence
           </p>
           <h1
             className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground"
-            // ↑ CHANGED: text-2xl on mobile, text-3xl on sm+
+
             style={{ fontFamily: "Arial, sans-serif" }}
           >
             Keyword opportunities
@@ -101,7 +98,7 @@ export default function KeywordsPage() {
         <Button
           onClick={() => setDialogOpen(true)}
           className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-xs lg:text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md w-full sm:w-auto shrink-0"
-          // ↑ CHANGED: justify-center, w-full on mobile, w-auto on sm+, shrink-0
+
         >
           <Plus size={15} />
           Track new keyword
@@ -110,10 +107,10 @@ export default function KeywordsPage() {
 
       <hr className="border-border" />
 
-      {/* Search Filter */}
+
       <div className="relative w-full max-w-lg glow-border rounded-lg">
-        {/* no change needed — already w-full */}
-        <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary z-10" />
+
+        <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" />
         <Input
           placeholder="Filter keywords..."
           value={query}
@@ -122,7 +119,6 @@ export default function KeywordsPage() {
         />
       </div>
 
-      {/* Stats Grid — already grid-cols-2, fine on mobile */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Tracked Keywords" value={keywords.length} />
         <StatCard label="Avg. Position" value={avgPos === "—" ? "—" : `↑${avgPos}`} />
@@ -130,10 +126,8 @@ export default function KeywordsPage() {
         <StatCard label="Top-10 Rankings" value={top10} accent />
       </div>
 
-      {/* Keywords Table */}
 <div className="glass-card rounded-2xl overflow-hidden glow-border">
   <div className="overflow-x-auto">
-    {/* Table Header */}
     <div className="grid grid-cols-[200px_140px_140px_80px_70px_110px] gap-4 px-6 py-4 border-b border-border bg-gray-50 min-w-[845px]">
       {["Keyword", "Demand", "Competition", "Pos.", "Trend", "Opportunity"].map((col) => (
         <span key={col} className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
@@ -142,7 +136,6 @@ export default function KeywordsPage() {
       ))}
     </div>
 
-    {/* Table Rows */}
     {filtered.length === 0 ? (
       <div className="px-6 py-12 text-center text-muted-foreground text-sm min-w-[780px]">
         No keywords match your filter.
@@ -172,8 +165,6 @@ export default function KeywordsPage() {
     )}
   </div>
 </div>
-
-      {/* Add Keyword Dialog */}
       <AddKeywordDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}

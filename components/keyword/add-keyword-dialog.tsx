@@ -38,14 +38,14 @@ export default function AddKeywordDialog({ open, onClose, onAdd }: AddKeywordDia
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DialogContent className="sm:max-w-md border-border p-0 overflow-hidden bg-white">
-        {/* Gradient Line */}
+
         <div
           className="absolute top-0 left-0 right-0 h-px pointer-events-none"
           style={{ background: "var(--gradient-border)" }}
         />
 
         <div className="p-6 space-y-5">
-          {/* Header */}
+
           <DialogHeader className="space-y-1">
             <DialogTitle
               className="text-lg font-bold text-foreground"
@@ -58,7 +58,6 @@ export default function AddKeywordDialog({ open, onClose, onAdd }: AddKeywordDia
             </DialogDescription>
           </DialogHeader>
 
-          {/* Input Field */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
               Keyword
@@ -80,7 +79,6 @@ export default function AddKeywordDialog({ open, onClose, onAdd }: AddKeywordDia
             </p>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center gap-3 pt-1">
             <Button
               onClick={handleSubmit}
