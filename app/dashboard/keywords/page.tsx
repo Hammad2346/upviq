@@ -128,7 +128,8 @@ export default function KeywordsPage() {
         <StatCard label="Top-10 Rankings" value={top10} accent />
       </div>
 
-<div className="glass-card rounded-2xl overflow-hidden glow-border">
+{
+!isMobile?(<div className="glass-card rounded-2xl overflow-hidden glow-border">
   <div className="overflow-x-auto">
     <div className="grid grid-cols-6 px-6 py-4 gap-4 border-b border-border bg-gray-50 min-w-[720px]">
       {["Keyword", "Demand", "Competition", "Pos.", "Trend", "Opportunity"].map((col) => (
@@ -168,7 +169,27 @@ export default function KeywordsPage() {
       ))
     )}
   </div>
-</div>
+</div>):
+
+(
+  <>
+
+    {
+    filtered.length === 0 ? (
+      <div className="px-6 py-12 text-center text-muted-foreground text-sm min-w-[720px]">
+        No keywords match your filter.
+      </div>
+    ) : (<div className="h-[400px] overflow-scroll">
+      {filtered.map((kw, i) =>(<KeywordMobileCard kw={kw} />))}
+
+      </div>)
+      
+      }
+  </>
+)
+}
+
+
 
       <AddKeywordDialog
         open={dialogOpen}
