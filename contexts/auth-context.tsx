@@ -26,8 +26,11 @@ export function AuthContext({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (!fbUser) {
-        pathName.startsWith("/dashboard");
-        router.replace("/login");
+        if(pathName.startsWith("/dashboard")){
+
+          router.replace("/login");
+        }
+        
       }
     });
     return ()=> unsubscribe();

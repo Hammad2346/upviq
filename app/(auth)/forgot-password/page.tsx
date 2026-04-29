@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
                     type="email"
                     placeholder="you@example.com"
                     {...register("email")}
-                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60"
+                    className="border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60"
                   />
                   {errors.email && (
                     <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full font-semibold text-primary-foreground mt-1"
+                  className="w-full font-semibold text-primary-foreground mt-1 cursor-pointer hover:opacity-90 transition-opacity"
                   style={{ background: "var(--gradient-primary)" }}
                 >
                   {isSubmitting ? (

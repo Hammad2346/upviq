@@ -83,7 +83,7 @@ export default function SignupPage() {
                 type="text"
                 placeholder="Jane Smith"
                 {...register("name")}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60"
+                className="border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60"
               />
               {errors.name && (
                 <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
@@ -99,7 +99,7 @@ export default function SignupPage() {
                 type="email"
                 placeholder="you@example.com"
                 {...register("email")}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60"
+                className="border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60"
               />
               {errors.email && (
                 <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
@@ -115,7 +115,7 @@ export default function SignupPage() {
                 type="password"
                 placeholder="Min. 6 characters"
                 {...register("password")}
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60"
+                className="border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary focus-visible:ring-1 focus-visible:border-primary/60"
               />
               {errors.password && (
                 <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
@@ -125,7 +125,7 @@ export default function SignupPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full font-semibold text-primary-foreground mt-1"
+              className="w-full font-semibold text-primary-foreground mt-1 cursor-pointer hover:opacity-90 transition-opacity"
               style={{ background: "var(--gradient-primary)" }}
             >
               {isSubmitting ? (
