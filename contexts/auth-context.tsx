@@ -9,14 +9,20 @@ import {
   useState,
   ReactNode,
 } from "react";
-const authContext = createContext({
+type AuthContextType = {
+  firebaseUser: FirebaseUser | null;
+  dbUser: any;
+  loading: boolean;
+  isAdmin: boolean;
+};
+const authContext = createContext<AuthContextType>({
   firebaseUser: null,
   dbUser: null,
-  loading: null,
-  isAdmin: null,
+  loading: false,
+  isAdmin: false,
 });
 export function AuthContext({ children }: { children: ReactNode }) {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>();
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [dbUser, setDbUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin,setIsAdmin]=useState(false)

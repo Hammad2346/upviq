@@ -24,8 +24,7 @@ import {
 } from "lucide-react"
 import { logoutUser } from "@/lib/firebase-auth"
 import { useRouter } from "next/navigation"
-import { auth } from "@/lib/firebase"
-import { useAuthState } from "react-firebase-hooks/auth"
+import { useAuth } from "@/contexts/auth-context"
 
 const navItems = [
   {
@@ -53,7 +52,7 @@ const navItems = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const [user] = useAuthState(auth)
+  const {firebaseUser:user} = useAuth()
   const { open } = useSidebar()
 
   async function handleLogout() {
