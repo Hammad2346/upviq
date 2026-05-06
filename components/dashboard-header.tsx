@@ -45,7 +45,7 @@ export function DashboardHeader() {
   const unreadCount = placeholderNotifications.filter((n) => n.unread).length
 
   return (
-    <header className="h-14 border-b border-border flex items-center gap-3 px-4 bg-white sticky top-0 z-10">
+    <header className="h-14 border-b border-border flex items-center gap-3 px-4 bg-background sticky top-0 z-10">
 
       <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-gray-300 shrink-0" />
 

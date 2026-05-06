@@ -21,12 +21,18 @@ import {
   Settings,
   User,
   LogOut,
+  Sparkles
 } from "lucide-react"
 import { logoutUser } from "@/lib/firebase-auth"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 
 const navItems = [
+    {
+    label: "Profile",
+    href: "/dashboard/profile",
+    icon: User,
+  },
   {
     label: "Profile Score",
     href: "/dashboard/profile-score",
@@ -37,15 +43,15 @@ const navItems = [
     href: "/dashboard/keywords",
     icon: Tag,
   },
+    {
+    label: "AI Rewrites",
+    href: "/dashboard/rewrites",
+    icon: Sparkles,
+  },
   {
     label: "Settings",
     href: "/dashboard/settings",
     icon: Settings,
-  },
-  {
-    label: "Profile",
-    href: "/dashboard/profile",
-    icon: User,
   },
 ]
 
@@ -61,7 +67,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="bg-white border-r border-border" collapsible="icon">
+    <Sidebar className="bg-background border-r border-border" collapsible="icon">
 
       <div className="px-4 h-14 border-b border-border flex items-center justify-center gap-3">
         <Image
