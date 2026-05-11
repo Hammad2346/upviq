@@ -169,14 +169,14 @@ export default function RewritesPage() {
         </div>
       )}
 
-      {/* Stat Cards */}
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Total Rewrites" value={totalRewrites} sub="Lifetime" />
         <StatCard label="Applied" value={applied} sub={`${acceptanceRate}% acceptance rate`} />
         <StatCard label="Avg. Impact" value="+38%" sub="Engagement uplift" accent />
       </div>
 
-      {/* Rewrite Cards */}
+
       <div className="space-y-4">
         {loading
           ? [0, 1, 2].map((i) => <SkeletonRewriteCard key={i} />)
@@ -221,7 +221,6 @@ function RewriteCard({
   return (
     <div className="glass-card rounded-2xl border border-border overflow-hidden bg-white">
 
-      {/* Card header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -237,7 +236,6 @@ function RewriteCard({
         </span>
       </div>
 
-      {/* Before / After */}
       <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border">
         <div className="p-5">
           <p className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2">
@@ -259,14 +257,12 @@ function RewriteCard({
         </div>
       </div>
 
-      {/* Reason */}
       {rw.reason && (
         <div className="px-5 py-3 border-t border-border bg-gray-50/40">
           <p className="text-xs text-muted-foreground leading-relaxed">{rw.reason}</p>
         </div>
       )}
 
-      {/* Actions — only for pending */}
       {rw.status === "pending" && (
         <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-border bg-gray-50/60">
           <button
