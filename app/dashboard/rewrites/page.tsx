@@ -1,57 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, Check, X, Pencil } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles, Check, X, Pencil, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAnalyze } from "@/contexts/analyze-context";
 
 type RewriteStatus = "applied" | "pending" | "discarded";
 
 interface Rewrite {
   id: number;
   type: "Title" | "Overview" | "Skill Tags";
-  timeAgo: string;
   metricLabel: string;
   metricValue: string;
   status: RewriteStatus;
   before: string;
   after: string;
+  reason: string;
 }
-
-const INITIAL_REWRITES: Rewrite[] = [
-  {
-    id: 1,
-    type: "Title",
-    timeAgo: "2 days ago",
-    metricLabel: "keyword match",
-    metricValue: "+34%",
-    status: "applied",
-    before: "Web Developer | React | Frontend",
-    after: "Senior React & TypeScript Developer | AI-Powered SaaS Specialist",
-  },
-  {
-    id: 2,
-    type: "Overview",
-    timeAgo: "5 hours ago",
-    metricLabel: "engagement score",
-    metricValue: "+47%",
-    status: "pending",
-    before:
-      "I'm a frontend developer with experience in React. I build websites and web apps for clients...",
-    after:
-      "I architect performance-obsessed React + TypeScript applications for SaaS founders shipping fast. Over 60+ projects delivered with measurable impact on Core Web Vitals, conversion, and DX...",
-  },
-  {
-    id: 3,
-    type: "Skill Tags",
-    timeAgo: "1 week ago",
-    metricLabel: "niche-top-10 matches",
-    metricValue: "+5",
-    status: "applied",
-    before: "JavaScript, HTML, CSS, React",
-    after:
-      "React, TypeScript, Next.js, AI/LLM Integration, Tailwind CSS, Edge Functions, Supabase",
-  },
-];
 
 const statusStyles: Record<RewriteStatus, string> = {
   applied:
@@ -68,14 +33,91 @@ const statusLabel: Record<RewriteStatus, string> = {
   discarded: "Discarded",
 };
 
-export default function RewritesPage() {
-  const [rewrites, setRewrites] = useState<Rewrite[]>(INITIAL_REWRITES);
+function Skeleton({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`animate-pulse rounded-md bg-gray-200 ${className}`}
+      style={{ backgroundColor: "var(--color-border, #e5e7eb)" }}
+    />
+  );
+}
 
-  const totalRewrites = rewrites.length;
-  const applied = rewrites.filter((r) => r.status === "applied").length;
-  const acceptanceRate =
-    totalRewrites > 0 ? Math.round((applied / totalRewrites) * 100) : 0;
-  const avgImpact = "+38%";
+function SkeletonRewriteCard() {
+  return (
+    <div className="glass-card rounded-2xl border border-border overflow-hidden bg-white">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-9 h-9 rounded-full" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-24 rounded" />
+            <Skeleton className="h-3 w-16 rounded" />
+          </div>
+        </div>
+        <Skeleton className="h-6 w-24 rounded-full" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border">
+        <div className="p-5 space-y-2">
+          <Skeleton className="h-3 w-12 rounded" />
+          <Skeleton className="h-4 w-full rounded" />
+          <Skeleton className="h-4 w-3/4 rounded" />
+        </div>
+        <div className="p-5 space-y-2">
+          <Skeleton className="h-3 w-16 rounded" />
+          <Skeleton className="h-4 w-full rounded" />
+          <Skeleton className="h-4 w-5/6 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function RewritesPage() {
+  const { result, loading, error, analyze } = useAnalyze();
+  const [rewrites, setRewrites] = useState<Rewrite[]>([]);
+
+
+  useEffect(() => {
+    if (!result?.suggestions) return;
+
+    const { title, overview, skills } = result.suggestions;
+
+    setRewrites([
+      {
+        id: 1,
+        type: "Title",
+        metricLabel: "keyword relevance",
+        metricValue: "+34%",
+        status: "pending",
+        before: title.current,
+        after: title.rewritten,
+        reason: title.reason,
+      },
+      {
+        id: 2,
+        type: "Overview",
+        metricLabel: "engagement score",
+        metricValue: "+47%",
+        status: "pending",
+        before: overview.current,
+        after: overview.rewritten,
+        reason: overview.reason,
+      },
+      {
+        id: 3,
+        type: "Skill Tags",
+        metricLabel: "niche-top-10 matches",
+        metricValue: `+${skills.missing.length}`,
+        status: "pending",
+        before: skills.reorder.slice(0, 4).join(", "),
+        after: [...skills.missing, ...skills.reorder].join(", "),
+        reason: skills.reason,
+      },
+    ]);
+  }, [result]);
+
+  const totalRewrites  = rewrites.length;
+  const applied        = rewrites.filter((r) => r.status === "applied").length;
+  const acceptanceRate = totalRewrites > 0 ? Math.round((applied / totalRewrites) * 100) : 0;
 
   function applyRewrite(id: number) {
     setRewrites((prev) =>
@@ -91,6 +133,7 @@ export default function RewritesPage() {
 
   return (
     <div className="min-h-screen space-y-6 p-4 sm:p-6">
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <p className="text-xs font-bold tracking-widest uppercase text-primary">
@@ -105,70 +148,64 @@ export default function RewritesPage() {
           </p>
         </div>
 
-        <Button className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-xs lg:text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md w-full sm:w-auto shrink-0">
-          <Sparkles size={15} />
-          Generate new
+        <Button
+          onClick={() => analyze(result as any)}
+          disabled={loading}
+          className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-xs lg:text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md w-full sm:w-auto shrink-0"
+          style={{ opacity: loading ? 0.7 : 1 }}
+        >
+          {loading
+            ? <RefreshCw size={15} className="animate-spin" />
+            : <Sparkles size={15} />}
+          {loading ? "Generating…" : "Generate new"}
         </Button>
       </div>
 
       <hr className="border-border" />
 
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Total Rewrites"
-          value={totalRewrites}
-          sub="Lifetime"
-        />
-        <StatCard
-          label="Applied"
-          value={applied}
-          sub={`${acceptanceRate}% acceptance rate`}
-        />
-        <StatCard
-          label="Avg. Impact"
-          value={avgImpact}
-          sub="Engagement uplift"
-          accent
-        />
+        <StatCard label="Total Rewrites" value={totalRewrites} sub="Lifetime" />
+        <StatCard label="Applied" value={applied} sub={`${acceptanceRate}% acceptance rate`} />
+        <StatCard label="Avg. Impact" value="+38%" sub="Engagement uplift" accent />
       </div>
 
       {/* Rewrite Cards */}
       <div className="space-y-4">
-        {rewrites.map((rw) => (
-          <RewriteCard
-            key={rw.id}
-            rw={rw}
-            onApply={() => applyRewrite(rw.id)}
-            onDiscard={() => discardRewrite(rw.id)}
-          />
-        ))}
+        {loading
+          ? [0, 1, 2].map((i) => <SkeletonRewriteCard key={i} />)
+          : rewrites.map((rw) => (
+              <RewriteCard
+                key={rw.id}
+                rw={rw}
+                onApply={() => applyRewrite(rw.id)}
+                onDiscard={() => discardRewrite(rw.id)}
+              />
+            ))
+        }
       </div>
+
     </div>
   );
 }
 
 function StatCard({
-  label,
-  value,
-  sub,
-  accent,
+  label, value, sub, accent,
 }: {
-  label: string;
-  value: string | number;
-  sub: string;
-  accent?: boolean;
+  label: string; value: string | number; sub: string; accent?: boolean;
 }) {
   return (
     <div className="glass-card rounded-2xl border border-border p-5 space-y-1 bg-white">
       <p className="text-xs font-bold tracking-widest uppercase text-muted-foreground">
         {label}
       </p>
-      <p
-        className={`text-3xl font-bold tracking-tight ${
-          accent ? "text-primary" : "text-foreground"
-        }`}
-      >
+      <p className={`text-3xl font-bold tracking-tight ${accent ? "text-primary" : "text-foreground"}`}>
         {value}
       </p>
       <p className="text-xs text-muted-foreground">{sub}</p>
@@ -177,16 +214,13 @@ function StatCard({
 }
 
 function RewriteCard({
-  rw,
-  onApply,
-  onDiscard,
+  rw, onApply, onDiscard,
 }: {
-  rw: Rewrite;
-  onApply: () => void;
-  onDiscard: () => void;
+  rw: Rewrite; onApply: () => void; onDiscard: () => void;
 }) {
   return (
     <div className="glass-card rounded-2xl border border-border overflow-hidden bg-white">
+
       {/* Card header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
@@ -195,19 +229,12 @@ function RewriteCard({
           </div>
           <div>
             <p className="font-semibold text-sm text-foreground">{rw.type}</p>
-            <p className="text-xs text-muted-foreground">{rw.timeAgo}</p>
+            <p className="text-xs text-muted-foreground">{rw.metricValue} {rw.metricLabel}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-primary hidden sm:block">
-            {rw.metricValue} {rw.metricLabel}
-          </span>
-          <span
-            className={`text-xs font-semibold px-3 py-1 rounded-full ${statusStyles[rw.status]}`}
-          >
-            {statusLabel[rw.status]}
-          </span>
-        </div>
+        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusStyles[rw.status]}`}>
+          {statusLabel[rw.status]}
+        </span>
       </div>
 
       {/* Before / After */}
@@ -232,7 +259,14 @@ function RewriteCard({
         </div>
       </div>
 
-      {/* Actions — only show for pending */}
+      {/* Reason */}
+      {rw.reason && (
+        <div className="px-5 py-3 border-t border-border bg-gray-50/40">
+          <p className="text-xs text-muted-foreground leading-relaxed">{rw.reason}</p>
+        </div>
+      )}
+
+      {/* Actions — only for pending */}
       {rw.status === "pending" && (
         <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-border bg-gray-50/60">
           <button
@@ -252,6 +286,7 @@ function RewriteCard({
           </Button>
         </div>
       )}
+
     </div>
   );
 }
