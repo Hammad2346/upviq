@@ -27,7 +27,7 @@ const DIMENSIONS = [
   { label: "Title Optimization", weight: 20, score: 96 },
   { label: "Overview Quality", weight: 25, score: 91 },
   { label: "Skill Tags Coverage", weight: 15, score: 88 },
-  { label: "Portfolio Strength", weight: 15, score: 94 },
+  // { label: "Portfolio Strength", weight: 15, score: 94 },
   { label: "Rate Positioning", weight: 10, score: 82 },
   { label: "Engagement Signals", weight: 15, score: 97 },
 ];
