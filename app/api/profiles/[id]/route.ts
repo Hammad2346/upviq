@@ -20,36 +20,21 @@ export async function GET(
       FROM freelancer_profiles p
       LEFT JOIN freelancer_skills s
         ON s.freelancer_profile_id = p.id
-      WHERE p.id = $1
+      WHERE p.user_id = $1
       GROUP BY p.id
+      LIMIT 1
       `,
       [id]
     );
 
     if (result.rows.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Profile not found',
-        },
-        { status: 404 }
-      );
+      return NextResponse.json(null, { status: 200 });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: result.rows[0],
-    });
+    return NextResponse.json(result.rows[0]);
 
   } catch (error) {
     console.error(error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to fetch profile',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
   }
 }

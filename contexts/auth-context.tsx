@@ -14,6 +14,7 @@ import axios from "axios";
 type AuthContextType = {
   firebaseUser: FirebaseUser | null;
   dbUser: any;
+  dbProfile: any;
   loading: boolean;
   isAdmin: boolean;
 };
@@ -21,6 +22,7 @@ type AuthContextType = {
 const authContext = createContext<AuthContextType>({
   firebaseUser: null,
   dbUser: null,
+  dbProfile: null,
   loading: true,
   isAdmin: false,
 });
@@ -28,6 +30,7 @@ const authContext = createContext<AuthContextType>({
 export function AuthContext({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [dbUser, setDbUser] = useState<any>(null);
+  const [dbProfile, setDbProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const pathName = usePathname();
@@ -38,14 +41,23 @@ export function AuthContext({ children }: { children: ReactNode }) {
       setFirebaseUser(fbUser);
       if (fbUser) {
         try {
-          const res = await axios.get(`/api/users?email=${fbUser.email}`);
-          setDbUser(res.data);
-          setIsAdmin(res.data?.is_admin ?? false);
+          const userRes = await axios.get(`/api/users?email=${fbUser.email}`);
+          setDbUser(userRes.data);
+          setIsAdmin(userRes.data?.is_admin ?? false);
+
+          try {
+            const profileRes = await axios.get(`/api/profiles/${userRes.data.id}`);
+            setDbProfile(profileRes.data);
+          } catch {
+            setDbProfile(null);
+          }
         } catch {
           setDbUser(null);
+          setDbProfile(null);
         }
       } else {
         setDbUser(null);
+        setDbProfile(null);
         setIsAdmin(false);
       }
       setLoading(false);
@@ -60,7 +72,7 @@ export function AuthContext({ children }: { children: ReactNode }) {
   }, [pathName, firebaseUser, loading]);
 
   return (
-    <authContext.Provider value={{ firebaseUser, dbUser, loading, isAdmin }}>
+    <authContext.Provider value={{ firebaseUser, dbUser, dbProfile, loading, isAdmin }}>
       {children}
     </authContext.Provider>
   );
