@@ -20,22 +20,25 @@ export function AnalyzeProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
 
-  const analyze = useCallback(async (profile: Freelancer) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios.post("/api/analyze", { profile });
-      if (res.data.success) {
-        setResult(res.data.data);
-      } else {
-        setError(res.data.error);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+const analyze = useCallback(async (profile: Freelancer) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await axios.post("/api/analyze", { profile });
+    if (res.data.success) {
+      setResult(res.data.data);
+      return res.data.data;
+    } else {
+      setError(res.data.error);
+      return null;
     }
-  }, []);
+  } catch (err: any) {
+    setError(err.message);
+    return null;
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const reset = useCallback(() => {
     setResult(null);

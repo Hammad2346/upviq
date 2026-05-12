@@ -15,51 +15,39 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAnalyze } from "@/contexts/analyze-context";
+import { useAuth } from "@/contexts/auth-context";
+import { saveAnalysis, saveProfile } from "@/lib/api";
+import { AnalyzeResult } from "@/lib/analyze/types";
 
 const PROFILE_DATA = {
-  name: "Salman S.",
-  title: "Top AI-Enabled Game Developer | AR/VR/XR Specialist | Unity | Unreal",
-  location: "Pakistan",
-  avatarUrl: "https://www.upwork.com/profile-portraits/c13wfUX9wS7Q_38tVOBma1v5_gAkcQ453kLjxa1Nuw6gc8xhARhSo1RphQoI43MSa_",
-  profileUrl: "https://www.upwork.com/freelancers/~01daa0337b257ef5b5?referrer_url_path=/nx/search/talent/",
-  rate: 18,
-  jobSuccess: 100,
-  earnings: "10M+ downloads",
-  hasAvailableNow: true,
-  hasTopRated: true,
-  jobsRelatedCount: 10,
-  skills: [
-    "Video Game",
-    "Game Development",
-    "Game Level",
-    "Game Design",
-    "Game Design Document",
+    "searchUrl": "https://www.upwork.com/nx/search/talent/?nbs=1&q=ai%20enabled%20game%20developer",
+  "name": "Mukkaram S.",
+  "profileId": "014cca439911526613",
+  "profileUrl": "https://www.upwork.com/freelancers/~014cca439911526613?referrer_url_path=/nx/search/talent/",
+  "title": "Unity Game Developer | VR/AR Specialist | Multiplayer Game",
+  "location": "Pakistan",
+  "avatarUrl": "https://www.upwork.com/profile-portraits/c1bL2RUwHgshMnLL0A5Bui0cLqape2ujipJWVImLwRK1rxaBVDqeumL3e_r6y8mPdP",
+  "rate": 25,
+  "jobSuccess": 100,
+  "earnings": "$100K+ earned",
+  "hasAvailableNow": true,
+  "hasTopRated": true,
+  "skills": [
     "Unity",
-    "Unreal Engine",
+    "AR & VR Development",
+    "VR Application",
     "Online Multiplayer",
-    "WebGL",
-    "C#",
-    "Android",
+    "Multiplayer",
     "Photon Unity Networking",
-    "Game Customization",
-    "Mobile Game Development",
-    "React Native",
+    "Meta Quest",
+    "PC Game",
+    "Game Development",
+    "AI Model Integration"
   ],
-  description: `🥇 Game Design & Developer. "Let me say some words about this seller: OUTSTANDING PROFESSIONAL, OUTSTANDING PERSON, and OUTSTANDING EXPERIENCE for me. Delivered as promised and with dedication. 10 Stars from me. Thanks!" — jacksparrow427
-
-They say, "Choose a job you love, and you will never have to work a day in your life." For a passionate gamer, what could be better than designing and developing games? I'm here to bring your ideas to life, guiding them from initial concepts through to final production using a well-structured Game Development Life Cycle (GDLC).
-
-With over 10 years of industry experience, I've developed a wide range of cross-platform games for PC, Android, iOS, and WebGL. My work has garnered over 10 million downloads on mobile platforms, proving the impact and success of the games I've created.
-
-I specialize in both 2D and 3D game development, across various genres, including:
-🎮 Platformers and Endless Runners
-🃏 Board Games and Card Games (Single Player and Multiplayer)
-⚡ Hyper-casual/One-Tap Games
-🔫 First-Person and Third-Person Shooters (Single Player and Multiplayer)
-🛡️ RPG / Open World Games
-🛠️ Simulation Games (Single-player and Multiplayer)
-👾 Arcade/Action Games`,
-  scrapedAt: "2026-04-01T08:36:42.806Z",
+  "description": "I work deep in the code, solving real problems across multiplayer systems, VR/AR, Web3, and AI-driven gameplay. With 7+ years of hands-on Unity development and 100+ shipped projects across Meta Store, Steam, Web3 platforms, Google Play, and the Apple App Store, I’ve delivered everything from fighting and FPS games to large-scale simulations, VR training applications, and live WebGL deployments that run in production. Why Work With Me? Diverse Project Experience: • Web3 Games – NFT, P2E, smart contracts, crypto wagers, wallet integration (Phantom, OKX, embedded & custom wallets) • Multiplayer Games – MMO, FPS, racing, boxing, basketball, turn-based, and real-time multiplayer • VR/AR – Meta Quest, HTC Vive, Pico, Apple Vision Pro, training simulations, educational apps • Corporate & Industrial Apps – Industrial simulations using MQTT, enterprise training solutions • Mobile & Web Games – Casual, arcade, puzzle, strategy, fighting, parkour, endless runners Technical Expertise: • VR/AR Development – OpenXR, XR Interaction Toolkit, Meta SDK, Hexabody, Vuforia, Ultraleap • Fighting Game Systems – Universal Fighting Engine (UFE), combo systems, hit detection, character states, animations • Multiplayer Networking – Photon PUN, Photon Fusion, Mirror, server-authoritative and P2P architectures • Backend & Cloud – PlayFab/CBS, Firebase, Node.js, MongoDB, Azure Blob Storage, AWS (S3, CloudFront) • WebGL Deployment – AWS S3 + CloudFront setup for hosting and delivering Unity WebGL builds • AI Integration – OpenAI (Chat, Realtime API, STT, TTS), GPT-powered NPCs, ElevenLabs voice synthesis, conversational AI systems • Web3 – NFT integration, crypto payments, smart contracts, play-to-earn tournaments, wager-based systems • Full-Stack Delivery – UI/UX, 2D/3D assets, animation pipelines, server development, API integrations • Monetization – In-app purchases, ads, subscriptions, crypto-based monetization • Project Management – Notion, ClickUp, sprint planning, leading cross-functional teams Client Satisfaction: “Mukkaram is a very nice and kind freelancer. He helped me from start to finish and ensured I fully understood how the project works.” Notable Projects: • VR Multiplayer Games – Finding the Killer, Boxing Simulator, Cricket Batting, Table Tennis, Golf Digger, Escape Room • VR Applications – Therapy App, Surgery Simulator, VR Lab, VR Classroom, Music Conducting App, Archive Restoration for Qatar Archives • AR Projects – BMW Showroom QR Experience, Ultraleap Gesture Tracking, Patient Chart Visualization • Web3 Titles – NFT-based Fighting Game, Pixel-Art Minecraft-style MMO, Web Rhythm Game with Wallet Integration, Crypto Parkour & Tower Games, Play-to-Earn Space Shooter • Mobile & Web Games – Match-3 Multiplayer, Endless Runner, Forest Defense, Basketball & Boxing Wager Games, Life Simulation Apps • Corporate & Industrial Apps – Safety Training for Kids in Metaverse, MQTT-connected industrial simulations What I Can Do For You: • Build production-ready VR/AR experiences for training, simulation, and entertainment • Create secure, scalable multiplayer games with full backend support • Develop Web3-enabled games with NFTs, wallets, and crypto payments • Deliver full-cycle game development from concept to launch • Optimize performance for mobile, PC, WebGL, and XR platforms If you’re looking for a Unity developer who understands both technology and delivery, and a team that can execute without hand-holding — let’s build something solid.",
+  "jobsRelatedCount": 16,
+  "scrapedAt": "2026-04-01T08:36:42.806Z"
 };
 
 function StatBox({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
@@ -113,21 +101,25 @@ function Badge({
 export default function ProfilePage() {
   const [url, setUrl] = useState("");
   const [analyzed, setAnalyzed] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
+  const {loading,result,analyze}=useAnalyze()
+  const {dbUser}=useAuth()
 
   const profile = PROFILE_DATA;
   const descLines = profile.description.split("\n");
   const descPreview = descLines.slice(0, 4).join("\n");
 
-  function handleAnalyze() {
-    if (!url.trim()) return;
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setAnalyzed(true);
-    }, 1400);
+async function handleAnalyze() {
+  const saved = await saveProfile(dbUser.id, PROFILE_DATA);
+  
+  if (saved.success) {
+    const analysisResult = await analyze(PROFILE_DATA);
+    await saveAnalysis(saved.freelancerProfileId, {
+      ...analysisResult,
+      user_id: dbUser.id,
+    });
   }
+}
 
   return (
     <div className="min-h-screen space-y-8 p-6">
