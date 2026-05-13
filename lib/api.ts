@@ -63,10 +63,15 @@ export async function saveProfile(userId: number, profile: Freelancer) {
   return data as { success: boolean; freelancerProfileId: number };
 }
 
-export async function saveAnalysis(dbProfileId: number, input: SaveAnalysisInput) {
-  const { data } = await axios.post(`/api/profiles/${dbProfileId}/analysis`, input);
+export async function saveAnalysis(dbProfileId: number, userId: number, input: SaveAnalysisInput) {
+  const { data } = await axios.post(`/api/profiles/${dbProfileId}/analysis`, {
+    user_id: userId,
+    ...input,
+  });
   return data as { success: boolean; analysisId: number };
 }
+ 
+
 
 export async function getAnalysis(dbProfileId: number, userId: number) {
   const { data } = await axios.get(`/api/profiles/${dbProfileId}/analysis`, {

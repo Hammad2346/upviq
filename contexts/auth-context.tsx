@@ -9,9 +9,16 @@ import {
 } from "react";
 
 import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
-import { usePathname, useRouter } from "next/navigation";
+import {
+  onAuthStateChanged,
+  User as FirebaseUser,
+} from "firebase/auth";
+
+import {
+  usePathname,
+  useRouter,
+} from "next/navigation";
 
 import axios from "axios";
 
@@ -19,28 +26,55 @@ import { getAnalysis } from "@/lib/api";
 
 type AuthContextType = {
   firebaseUser: FirebaseUser | null;
+
   dbUser: any;
+
   dbProfile: any;
+
   dbAiAnalysis: any;
+
   loading: boolean;
+
+  refreshProfile: () => Promise<void>;
+
+  refreshAnalysis: () => Promise<void>;
+
+  refreshAll: () => Promise<void>;
 };
 
 const authContext = createContext<AuthContextType>({
   firebaseUser: null,
+
   dbUser: null,
+
   dbProfile: null,
+
   dbAiAnalysis: null,
+
   loading: true,
+
+  refreshProfile: async () => {},
+
+  refreshAnalysis: async () => {},
+
+  refreshAll: async () => {},
 });
 
-export function AuthContext({ children }: { children: ReactNode }) {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+export function AuthContext({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [firebaseUser, setFirebaseUser] =
+    useState<FirebaseUser | null>(null);
 
   const [dbUser, setDbUser] = useState<any>(null);
 
-  const [dbProfile, setDbProfile] = useState<any>(null);
+  const [dbProfile, setDbProfile] =
+    useState<any>(null);
 
-  const [dbAiAnalysis, setDbAiAnalysis] = useState<any>(null);
+  const [dbAiAnalysis, setDbAiAnalysis] =
+    useState<any>(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -48,35 +82,61 @@ export function AuthContext({ children }: { children: ReactNode }) {
 
   const router = useRouter();
 
-  async function loadUserData(fbUser: FirebaseUser) {
+  async function fetchDbUser(email: string) {
     try {
-      const userRes = await axios.get(`/api/users?email=${fbUser.email}`);
+      const res = await axios.get(
+        `/api/users?email=${email}`
+      );
 
-      const user = userRes.data;
+      setDbUser(res.data);
 
-      setDbUser(user);
-
-      try {
-        const profileRes = await axios.get(`/api/profiles/${user.id}`);
-
-        const profile = profileRes.data;
-
-        setDbProfile(profile);
-
-        try {
-          const analysis = await getAnalysis(profile.id, profile.user_id);
-
-          setDbAiAnalysis(analysis);
-        } catch {
-          setDbAiAnalysis(null);
-        }
-      } catch {
-        setDbProfile(null);
-        setDbAiAnalysis(null);
-      }
+      return res.data;
     } catch {
-      clearUserState();
+      setDbUser(null);
+
+      return null;
     }
+  }
+
+  async function refreshProfile() {
+    if (!dbUser?.id) {
+      setDbProfile(null);
+
+      return;
+    }
+
+    try {
+      const res = await axios.get(
+        `/api/profiles/${dbUser.id}`
+      );
+
+      setDbProfile(res.data);
+    } catch {
+      setDbProfile(null);
+    }
+  }
+
+  async function refreshAnalysis() {
+    if (!dbProfile?.id || !dbProfile?.user_id) {
+      setDbAiAnalysis(null);
+
+      return;
+    }
+
+    try {
+      const analysis = await getAnalysis(
+        dbProfile.id,
+        dbProfile.user_id
+      );
+
+      setDbAiAnalysis(analysis);
+    } catch {
+      setDbAiAnalysis(null);
+    }
+  }
+
+  async function refreshAll() {
+    await refreshProfile();
   }
 
   function clearUserState() {
@@ -86,37 +146,87 @@ export function AuthContext({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setLoading(true);
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (fbUser) => {
+        setLoading(true);
 
-      setFirebaseUser(fbUser);
+        setFirebaseUser(fbUser);
 
-      if (fbUser) {
-        await loadUserData(fbUser);
-      } else {
-        clearUserState();
+        if (fbUser) {
+          const user = await fetchDbUser(
+            fbUser.email || ""
+          );
+
+          if (user) {
+            try {
+              const profileRes = await axios.get(
+                `/api/profiles/${user.id}`
+              );
+
+              const profile = profileRes.data;
+
+              setDbProfile(profile);
+
+              try {
+                const analysis = await getAnalysis(
+                  profile.id,
+                  profile.user_id
+                );
+
+                setDbAiAnalysis(analysis);
+              } catch {
+                setDbAiAnalysis(null);
+              }
+            } catch {
+              setDbProfile(null);
+
+              setDbAiAnalysis(null);
+            }
+          }
+        } else {
+          clearUserState();
+        }
+
+        setLoading(false);
       }
-
-      setLoading(false);
-    });
+    );
 
     return unsubscribe;
   }, []);
 
   useEffect(() => {
-    if (!loading && !firebaseUser && pathname.startsWith("/dashboard")) {
+    if (
+      !loading &&
+      !firebaseUser &&
+      pathname.startsWith("/dashboard")
+    ) {
       router.replace("/login");
     }
   }, [loading, firebaseUser, pathname, router]);
+
+  useEffect(() => {
+    refreshAnalysis();
+  }, [dbProfile]);
 
   return (
     <authContext.Provider
       value={{
         firebaseUser,
+
         dbUser,
+
         dbProfile,
+
         dbAiAnalysis,
+
         loading,
+
+        refreshProfile,
+
+        refreshAnalysis,
+
+        refreshAll,
       }}
     >
       {children}
@@ -124,4 +234,5 @@ export function AuthContext({ children }: { children: ReactNode }) {
   );
 }
 
-export const useAuth = () => useContext(authContext);
+export const useAuth = () =>
+  useContext(authContext);
