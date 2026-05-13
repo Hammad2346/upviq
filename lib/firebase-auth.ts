@@ -7,7 +7,6 @@ import {
 } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 
-// Human-readable error messages for Firebase error codes
 function getErrorMessage(error: FirebaseError): string {
   switch (error.code) {
     case "auth/user-not-found":
@@ -29,7 +28,7 @@ function getErrorMessage(error: FirebaseError): string {
   }
 }
 
-// Login
+
 export async function loginUser(email: string, password: string) {
   try {
     const result = await signInWithEmailAndPassword(auth, email, password)
@@ -39,13 +38,11 @@ export async function loginUser(email: string, password: string) {
   }
 }
 
-// Signup — creates Firebase user then saves to Neon via API route
 export async function signupUser(name: string, email: string, password: string) {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password)
     const user = result.user
 
-    // Save user to Neon Postgres
     const res = await fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -57,7 +54,7 @@ export async function signupUser(name: string, email: string, password: string) 
     })
 
     if (!res.ok) {
-      // User created in Firebase but DB save failed — still let them in
+
       console.error("Failed to save user to database")
     }
 
@@ -67,7 +64,7 @@ export async function signupUser(name: string, email: string, password: string) 
   }
 }
 
-// Password reset
+
 export async function resetPassword(email: string) {
   try {
     await sendPasswordResetEmail(auth, email)
@@ -77,7 +74,6 @@ export async function resetPassword(email: string) {
   }
 }
 
-// Logout
 export async function logoutUser() {
   try {
     await signOut(auth)
