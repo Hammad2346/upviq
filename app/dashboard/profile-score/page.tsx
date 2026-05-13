@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles, Info, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,35 +13,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { useAnalyze } from "@/contexts/analyze-context";
-
-const TEST_PROFILE = {
-  searchUrl:
-    "https://www.upwork.com/nx/search/talent/?nbs=1&q=ai%20enabled%20game%20developer",
-  name: "Salman S.",
-  profileId: "01daa0337b257ef5b5",
-  profileUrl:
-    "https://www.upwork.com/freelancers/~01daa0337b257ef5b5",
-  title:
-    "Senior AI-Integrated Game Developer | Unity & Unreal | AR/VR/XR & Multiplayer Specialist",
-  location: "Pakistan",
-  avatarUrl: "",
-  rate: 18,
-  jobSuccess: 100,
-  earnings: "",
-  hasAvailableNow: true,
-  hasTopRated: true,
-  skills: [
-    "Unity","Unreal Engine","C#","Multiplayer Networking",
-    "Photon Unity Networking","AR/VR/XR Development","AI Model Integration",
-    "Game UI/UX Design","3D Game Art","ARKit / ARCore",
-    "Meta Quest Development","Online Multiplayer","Mobile Game Development",
-    "WebGL","Game Design",
-  ],
-  description:
-    "I bring over a decade of end-to-end game development experience, delivering high-performance Unity and Unreal titles across AR, VR, XR, and AI-enhanced multiplayer platforms. My expertise spans full-cycle production—from concept and UI/UX design to networked gameplay and AI model integration—ensuring immersive, scalable experiences for mobile, PC, and headset markets.",
-  jobsRelatedCount: 10,
-  scrapedAt: "2026-04-01T08:36:42.806Z",
-};
+import { useAuth } from "@/contexts/auth-context";
 
 const TRAJECTORY = [
   { day: "Day 1",  score: 62 },
@@ -61,11 +33,17 @@ const PARAM_META: Record<string, { label: string; weight: number }> = {
   engagementSignals: { label: "Engagement Signals",  weight: 18 },
 };
 
+const DB_KEY_MAP: Record<string, string> = {
+  title_score:      "titleOptimization",
+  overview_score:   "overviewQuality",
+  skills_score:     "skillTagsCoverage",
+  rate_score:       "ratePositioning",
+  engagement_score: "engagementSignals",
+};
+
 function getCSSVariable(varName: string): string {
   if (typeof window !== "undefined") {
-    return getComputedStyle(document.documentElement)
-      .getPropertyValue(varName)
-      .trim();
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
   }
   return "";
 }
@@ -94,7 +72,7 @@ function SkeletonCircularScore() {
         <Skeleton className="h-3 w-48 mx-auto rounded" />
       </div>
       <div className="flex gap-3 w-full">
-        {[0,1,2].map(i => <Skeleton key={i} className="flex-1 h-16 rounded-lg" />)}
+        {[0, 1, 2].map(i => <Skeleton key={i} className="flex-1 h-16 rounded-lg" />)}
       </div>
     </div>
   );
@@ -112,12 +90,10 @@ function SkeletonDimensionRow() {
   );
 }
 
-import { useState, useEffect as useEffectInner } from "react";
-
 function CircularScore({ score }: { score: number }) {
   const [colors, setColors] = useState({ primary: "#0F6E56", secondary: "#1D9E75" });
 
-  useEffectInner(() => {
+  useEffect(() => {
     setColors({
       primary:   getCSSVariable("--color-primary")   || "#0F6E56",
       secondary: getCSSVariable("--color-secondary") || "#1D9E75",
@@ -168,7 +144,7 @@ function DimensionRow({
 }) {
   const [width, setWidth] = useState(0);
 
-  useEffectInner(() => {
+  useEffect(() => {
     const t = setTimeout(() => setWidth(percentage), delay);
     return () => clearTimeout(t);
   }, [percentage, delay]);
@@ -227,29 +203,46 @@ function MiniStat({ value, label, green }: { value: string; label: string; green
 }
 
 export default function ProfileScorePage() {
-  const { result, loading, error, analyze } = useAnalyze();
+  const { loading, error, analyze } = useAnalyze();
+  const { dbProfile, dbAiAnalysis, dbUser } = useAuth();
+  const analysis = (dbAiAnalysis as any)?.data ?? dbAiAnalysis;
 
-  function handleRecompute() {
-    analyze(TEST_PROFILE);
-  }
-
-  const overallScore = result?.overallScore ?? 0;
+  const overallScore = analysis?.overall_score ?? 0;
   const SCORE_START  = 62;
   const SCORE_GAIN   = overallScore - SCORE_START;
 
-  const dimensions = result
-    ? Object.entries(result.parameters)
-        .filter(([key]) => key in PARAM_META)
-        .map(([key, param]) => ({
-          key,
-          label:      PARAM_META[key].label,
-          weight:     PARAM_META[key].weight,
-          score:      param.score,
-          maxScore:   param.maxScore,
-          percentage: param.percentage,
-          reasoning:  param.reasoning,
-        }))
+  const dimensions = analysis
+    ? Object.entries(DB_KEY_MAP).map(([dbKey, paramKey]) => ({
+        key:        paramKey,
+        label:      PARAM_META[paramKey].label,
+        weight:     PARAM_META[paramKey].weight,
+        score:      (analysis as any)[dbKey] ?? 0,
+        maxScore:   (analysis as any)[dbKey.replace("_score", "_max_score")] ?? 100,
+        percentage: (analysis as any)[dbKey.replace("_score", "_percentage")] ?? 0,
+        reasoning:  (analysis as any)[dbKey.replace("_score", "_reasoning")] ?? "",
+      }))
     : [];
+
+  function handleRecompute() {
+    if (!dbProfile) return;
+    analyze({
+      profileId:       dbProfile.profile_id,
+      name:            dbProfile.name,
+      title:           dbProfile.title,
+      description:     dbProfile.description,
+      profileUrl:      dbProfile.profile_url,
+      location:        dbProfile.location,
+      avatarUrl:       dbProfile.avatar_url,
+      rate:            Number(dbProfile.hourly_rate),
+      jobSuccess:      dbProfile.job_success,
+      earnings:        dbProfile.earnings,
+      hasAvailableNow: dbProfile.available_now,
+      hasTopRated:     dbProfile.top_rated,
+      skills:          dbProfile.skills ?? [],
+      jobsRelatedCount: dbProfile.jobs_related_count,
+      scrapedAt:       dbProfile.scraped_at,
+    } as any);
+  }
 
   return (
     <div className="min-h-screen space-y-6 p-4 sm:p-6">
@@ -271,7 +264,7 @@ export default function ProfileScorePage() {
         </div>
         <Button
           onClick={handleRecompute}
-          disabled={loading}
+          disabled={loading || !dbProfile}
           className="flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md w-full sm:w-auto shrink-0"
           style={{ opacity: loading ? 0.7 : 1 }}
         >
@@ -293,14 +286,14 @@ export default function ProfileScorePage() {
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
 
         <div className="glass-card glow-border rounded-2xl p-6 flex flex-col items-center gap-5">
-          {loading ? (
+          {(loading || !analysis) ? (
             <SkeletonCircularScore />
           ) : (
             <>
               <CircularScore score={overallScore} />
               <div className="text-center space-y-1">
                 <p className="text-base font-bold text-foreground">
-                  {result?.name ?? "—"}
+                  {dbProfile?.name ?? "—"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Benchmarked against top 10 profiles in your niche
@@ -320,8 +313,8 @@ export default function ProfileScorePage() {
             <p className="text-sm font-bold text-foreground">42-day trajectory</p>
             <p className="text-xs text-muted-foreground">Score recomputed daily as new market signal arrives</p>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-64 min-h-0">
+            <ResponsiveContainer width="100%" height={256}>
               <AreaChart data={TRAJECTORY} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="areaGradSm" x1="0" y1="0" x2="0" y2="1">
@@ -348,8 +341,8 @@ export default function ProfileScorePage() {
             <p className="text-xs text-muted-foreground">Trailing 42 days · Updated 2h ago</p>
           </div>
         </div>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-72 min-h-0">
+          <ResponsiveContainer width="100%" height={288}>
             <AreaChart data={TRAJECTORY} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="areaGradLg" x1="0" y1="0" x2="0" y2="1">
@@ -379,7 +372,7 @@ export default function ProfileScorePage() {
           </div>
         </div>
         <div className="space-y-5">
-          {loading
+          {(loading || !analysis)
             ? Array.from({ length: 5 }).map((_, i) => <SkeletonDimensionRow key={i} />)
             : dimensions.map((d, i) => (
                 <DimensionRow
