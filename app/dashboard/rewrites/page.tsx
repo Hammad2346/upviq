@@ -75,9 +75,11 @@ function buildRewrites(
   dbAiAnalysis: NonNullable<ReturnType<typeof useAuth>["dbAiAnalysis"]>,
   dbProfile: NonNullable<ReturnType<typeof useAuth>["dbProfile"]>
 ): Rewrite[] {
-  const { suggested_title, suggested_overview } = dbAiAnalysis;
+  const analysis = (dbAiAnalysis as any)?.data ?? dbAiAnalysis;  
+
+  const { suggested_title, suggested_overview } = analysis;
   const currentSkills: string[] = dbProfile.skills ?? [];
-  const suggestedSkills: string[] = (dbAiAnalysis as any).suggested_skills ?? currentSkills;
+  const suggestedSkills: string[] = analysis.suggested_skills ?? currentSkills;
 
   return [
     {
@@ -88,7 +90,7 @@ function buildRewrites(
       status: "pending",
       before: dbProfile.title ?? "",
       after: suggested_title ?? dbProfile.title ?? "",
-      reason: dbAiAnalysis.title_reasoning ?? "",
+      reason: analysis.title_reasoning ?? "",
     },
     {
       id: "overview",
@@ -98,7 +100,7 @@ function buildRewrites(
       status: "pending",
       before: dbProfile.description ?? "",
       after: suggested_overview ?? dbProfile.description ?? "",
-      reason: dbAiAnalysis.overview_reasoning ?? "",
+      reason: analysis.overview_reasoning ?? "",
     },
     {
       id: "skills",
@@ -109,14 +111,14 @@ function buildRewrites(
       before: currentSkills.slice(0, 6).join(", "),
       after: suggestedSkills.slice(0, 6).join(", "),
       afterSkills: suggestedSkills,
-      reason: dbAiAnalysis.skills_reasoning ?? "",
+      reason: analysis.skills_reasoning ?? "",
     },
   ];
 }
 
 export default function RewritesPage() {
   const { result, loading: analyzing, error: analyzeError, analyze } = useAnalyze();
-  const { dbProfile, dbAiAnalysis, user } = useAuth();
+  const { dbProfile, dbAiAnalysis, dbUser } = useAuth();
 
   const [rewrites, setRewrites] = useState<Rewrite[]>([]);
   const [cardStates, setCardStates] = useState<Record<string, CardState>>({});
@@ -140,7 +142,7 @@ export default function RewritesPage() {
   }, []);
 
   async function applyRewrite(rw: Rewrite) {
-    if (!dbProfile?.id || !user?.id) return;
+    if (!dbProfile?.id || !dbUser?.id) return;
 
     setCardState(rw.id, "saving");
     setCardErrors((prev) => ({ ...prev, [rw.id]: "" }));
@@ -154,7 +156,7 @@ export default function RewritesPage() {
       const res = await fetch(`/api/profiles/${dbProfile.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id, fields }),
+        body: JSON.stringify({ user_id: dbUser.id, fields }),
       });
 
       if (!res.ok) {
