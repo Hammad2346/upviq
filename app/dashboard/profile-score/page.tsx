@@ -206,7 +206,7 @@ export default function ProfileScorePage() {
   const { loading, error, analyze } = useAnalyze();
   const { dbProfile, dbAiAnalysis, dbUser } = useAuth();
   const analysis = (dbAiAnalysis as any)?.data ?? dbAiAnalysis;
-
+  console.log(analysis)
   const overallScore = analysis?.overall_score ?? 0;
   const SCORE_START  = 62;
   const SCORE_GAIN   = overallScore - SCORE_START;

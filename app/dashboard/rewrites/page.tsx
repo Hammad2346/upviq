@@ -63,59 +63,61 @@ function SkeletonCard() {
 }
 
 export default function RewritesPage() {
-  const { loading: analyzing, error: analyzeError, analyze } = useAnalyze();
+  const { loading: analyzing, error: analyzeError, analyze, result } = useAnalyze();
   const { dbProfile, dbAiAnalysis, dbUser } = useAuth();
 
   const [rewrites, setRewrites] = useState<Rewrite[]>([]);
 
-  useEffect(() => {
-    if (!dbAiAnalysis || !dbProfile) return;
+useEffect(() => {
+  if (!dbAiAnalysis || !dbProfile) return;
 
-    const analysis = (dbAiAnalysis as any)?.data ?? dbAiAnalysis;
-    const currentSkills: string[] = dbProfile.skills ?? [];
-    const suggestedSkills: string[] = analysis.suggested_skills ?? currentSkills;
+  const analysis = (dbAiAnalysis as any)?.data ?? dbAiAnalysis;
+  const currentSkills: string[] = dbProfile.skills ?? [];
 
-    setRewrites([
-      {
-        id: "title",
-        metricLabel: "keyword relevance",
-        metricValue: "+34%",
-        status: "pending",
-        before: dbProfile.title ?? "",
-        after: analysis.suggested_title ?? dbProfile.title ?? "",
-        reason: analysis.title_reasoning ?? "",
-        saving: false,
-        saveError: "",
-        saveSuccess: false,
-      },
-      {
-        id: "overview",
-        metricLabel: "engagement score",
-        metricValue: "+47%",
-        status: "pending",
-        before: dbProfile.description ?? "",
-        after: analysis.suggested_overview ?? dbProfile.description ?? "",
-        reason: analysis.overview_reasoning ?? "",
-        saving: false,
-        saveError: "",
-        saveSuccess: false,
-      },
-      {
-        id: "skills",
-        metricLabel: "niche-top-10 matches",
-        metricValue: `+${Math.max(0, suggestedSkills.length - currentSkills.length)}`,
-        status: "pending",
-        before: currentSkills.slice(0, 6).join(", "),
-        after: suggestedSkills.slice(0, 6).join(", "),
-        afterSkills: suggestedSkills,
-        reason: analysis.skills_reasoning ?? "",
-        saving: false,
-        saveError: "",
-        saveSuccess: false,
-      },
-    ]);
-  }, [dbAiAnalysis, dbProfile]);
+  const reordered: string[] = result?.suggestions?.skills?.reorder ?? currentSkills;
+  const missing: string[]   = result?.suggestions?.skills?.missing ?? [];
+  const suggestedSkills     = [...new Set([...reordered, ...missing])];
 
+  setRewrites([
+    {
+      id: "title",
+      metricLabel: "keyword relevance",
+      metricValue: "+34%",
+      status: "pending",
+      before: dbProfile.title ?? "",
+      after: analysis.suggested_title ?? dbProfile.title ?? "",
+      reason: analysis.title_reasoning ?? "",
+      saving: false,
+      saveError: "",
+      saveSuccess: false,
+    },
+    {
+      id: "overview",
+      metricLabel: "engagement score",
+      metricValue: "+47%",
+      status: "pending",
+      before: dbProfile.description ?? "",
+      after: analysis.suggested_overview ?? dbProfile.description ?? "",
+      reason: analysis.overview_reasoning ?? "",
+      saving: false,
+      saveError: "",
+      saveSuccess: false,
+    },
+    {
+      id: "skills",
+      metricLabel: "niche-top-10 matches",
+      metricValue: `+${missing.length}`,
+      status: "pending",
+      before: currentSkills.join(", "),
+      after: suggestedSkills.join(", "),
+      afterSkills: suggestedSkills,
+      reason: analysis.skills_reasoning ?? result?.suggestions?.skills?.reason ?? "",
+      saving: false,
+      saveError: "",
+      saveSuccess: false,
+    },
+  ]);
+}, [dbAiAnalysis, dbProfile, result]); 
   function update(id: string, patch: Partial<Rewrite>) {
     setRewrites((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }

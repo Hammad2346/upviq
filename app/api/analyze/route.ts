@@ -2,14 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { index } from "@/lib/pinecone";
 import { createEmbedding } from "@/lib/embed";
 import { structureFreelancerForVectorDB } from "@/lib/dataStructuring";
-import { buildScoringPrompt, buildSuggestionsPrompt } from "@/lib/analyze/prompts";
-import type { FreelancerProfile, AnalyzeResult, ParameterScore } from "@/lib/analyze/types";
+import {
+  buildScoringPrompt,
+  buildSuggestionsPrompt,
+} from "@/lib/analyze/prompts";
+import type {
+  FreelancerProfile,
+  AnalyzeResult,
+  ParameterScore,
+} from "@/lib/analyze/types";
 
 async function callGroq(prompt: string): Promise<string> {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      Authorization: `Bearer ${process.env.GROQ_API_KEY_ANOTHER}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -35,28 +42,29 @@ function parseJSON<T>(raw: string): T {
 
 function computeBenchmarks(topProfiles: FreelancerProfile[]) {
   const avgRate = Math.round(
-    topProfiles.reduce((sum, p) => sum + (p.rate ?? 0), 0) / topProfiles.length
+    topProfiles.reduce((sum, p) => sum + (p.rate ?? 0), 0) / topProfiles.length,
   );
   const avgJobSuccess = Math.round(
-    topProfiles.reduce((sum, p) => sum + (p.jobSuccess ?? 0), 0) / topProfiles.length
+    topProfiles.reduce((sum, p) => sum + (p.jobSuccess ?? 0), 0) /
+      topProfiles.length,
   );
   const skillFrequency: Record<string, number> = {};
-  topProfiles.forEach(p =>
-    p.skills?.forEach(s => {
+  topProfiles.forEach((p) =>
+    p.skills?.forEach((s) => {
       skillFrequency[s] = (skillFrequency[s] ?? 0) + 1;
-    })
+    }),
   );
   const commonSkills = Object.entries(skillFrequency)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
     .map(([skill]) => skill);
 
-  const topRatedCount = topProfiles.filter(p => p.hasTopRated).length;
+  const topRatedCount = topProfiles.filter((p) => p.hasTopRated).length;
 
   return {
-    avgRateTopProfiles:   avgRate,
-    avgJobSuccessTop:     avgJobSuccess,
-    commonSkillsInTop10:  commonSkills,
+    avgRateTopProfiles: avgRate,
+    avgJobSuccessTop: avgJobSuccess,
+    commonSkillsInTop10: commonSkills,
     topRatedCountInTop10: topRatedCount,
   };
 }
@@ -69,7 +77,7 @@ export async function POST(req: NextRequest) {
     if (!userProfile?.profileId) {
       return NextResponse.json(
         { success: false, error: "Missing profile or profileId" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -78,35 +86,43 @@ export async function POST(req: NextRequest) {
 
     const searchResults = await index.query({
       vector: embedding,
-      topK: 15, 
+      topK: 15,
       includeMetadata: true,
     });
 
     const topProfiles: FreelancerProfile[] = searchResults.matches
-      .filter(m => m.id !== userProfile.profileId)
+      .filter((m) => m.id !== userProfile.profileId)
       .slice(0, 10)
-      .map(m => m.metadata as unknown as FreelancerProfile);
+      .map((m) => m.metadata as unknown as FreelancerProfile);
 
     if (topProfiles.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Not enough profiles in database to benchmark against" },
-        { status: 400 }
+        {
+          success: false,
+          error: "Not enough profiles in database to benchmark against",
+        },
+        { status: 400 },
       );
     }
 
-    const [rawScores, rawSuggestions] = await Promise.all([
-      callGroq(buildScoringPrompt(userProfile, topProfiles)),
-      callGroq(buildSuggestionsPrompt(userProfile, topProfiles)),
-    ]);
+    const rawScores = await callGroq(
+      buildScoringPrompt(userProfile, topProfiles),
+    );
+    const scoresData =
+      parseJSON<Record<string, { score: number; reasoning: string }>>(
+        rawScores,
+      );
+    const rawSuggestions = await callGroq(
+      buildSuggestionsPrompt(userProfile, topProfiles, scoresData),
+    );
 
-    const scoresData   = parseJSON<Record<string, { score: number; reasoning: string }>>(rawScores);
-    const suggestData  = parseJSON<AnalyzeResult["suggestions"]>(rawSuggestions);
+    const suggestData = parseJSON<AnalyzeResult["suggestions"]>(rawSuggestions);
 
     const maxScores: Record<string, number> = {
       titleOptimization: 23,
-      overviewQuality:   29,
+      overviewQuality: 29,
       skillTagsCoverage: 18,
-      ratePositioning:   12,
+      ratePositioning: 12,
       engagementSignals: 18,
     };
 
@@ -116,36 +132,37 @@ export async function POST(req: NextRequest) {
         return [
           key,
           {
-            score:      val.score,
-            maxScore:   max,
+            score: val.score,
+            maxScore: max,
             percentage: Math.round((val.score / max) * 100),
-            reasoning:  val.reasoning,
+            reasoning: val.reasoning,
           } satisfies ParameterScore,
         ];
-      })
+      }),
     ) as AnalyzeResult["parameters"];
 
     const overallScore = Object.values(parameters).reduce(
-      (sum, p) => sum + p.score, 0
+      (sum, p) => sum + p.score,
+      0,
     );
 
     const result: AnalyzeResult = {
-      profileId:    userProfile.profileId,
-      name:         userProfile.name,
+      profileId: userProfile.profileId,
+      name: userProfile.name,
       overallScore,
       parameters,
       suggestions: {
         ...suggestData,
         title: {
-          current:   userProfile.title,
+          current: userProfile.title,
           ...suggestData.title,
         },
         overview: {
-          current:   userProfile.description?.slice(0, 800) ?? "",
+          current: userProfile.description?.slice(0, 800) ?? "",
           ...suggestData.overview,
         },
         skills: {
-          current:  userProfile.skills,
+          current: userProfile.skills,
           ...suggestData.skills,
         },
       },
@@ -153,11 +170,10 @@ export async function POST(req: NextRequest) {
     };
 
     return NextResponse.json({ success: true, data: result });
-
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

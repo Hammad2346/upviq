@@ -74,6 +74,7 @@ Award points based on:
 - Priority ordering: are the highest-value skills listed first? (0–5 pts)
 - Tag quality: are all tags relevant and high-signal for this niche, no dilution? (0–5 pts)
 Deduct for: missing high-frequency skills from top performers, irrelevant or overly broad tags, low-value filler skills
+In the reasoning, you MUST list by name the top 3-5 skills from the benchmark that the user is missing and should add immediately. Format them as: "Missing high-value skills: X, Y, Z"
 
 ### 4. Rate Positioning — max 12 points
 Award points based on:
@@ -95,7 +96,8 @@ Award points based on:
 - Be specific: reference actual title words, specific skills, actual rate numbers, actual job success %
 - Compare directly to top performers: "Top performers average $${avgRate}/hr, user is at $${userProfile.rate}/hr which..."
 - Never be vague: "good overview" is not acceptable reasoning — explain exactly what is strong or weak and why it affects score
-
+- For skillTagsCoverage: always end the reasoning with "Missing high-value skills: X, Y, Z" listing the top 3-5 skills from the benchmark the user does not have
+- For skillTagsCoverage: also end with "Add immediately: [skill1, skill2, skill3]" so the user knows exactly what to add
 ---
 
 ## OUTPUT FORMAT
@@ -113,7 +115,8 @@ Return ONLY a valid JSON object. No markdown, no backticks, no explanation outsi
 
 export function buildSuggestionsPrompt(
   userProfile: FreelancerProfile,
-  topProfiles: FreelancerProfile[]
+  topProfiles: FreelancerProfile[],
+  scoringResults: Record<string, { score: number; reasoning: string }>
 ): string {
   const topTitles = topProfiles.map(p => `- ${p.title}`).join("\n");
   const topSkills = [...new Set(topProfiles.flatMap(p => p.skills))].slice(0, 30).join(", ");
@@ -123,10 +126,44 @@ export function buildSuggestionsPrompt(
     .map((p, i) => `### Top Performer ${i + 1}\n${p.description?.slice(0, 400)}`)
     .join("\n\n");
 
+  const scoringSummary = Object.entries(scoringResults)
+    .map(([key, val]) => `- ${key}: ${val.score} points — ${val.reasoning}`)
+    .join("\n");
+
   return `
 You are a world-class Upwork profile strategist who has helped thousands of freelancers reach Top Rated Plus status. You deeply understand Upwork's search algorithm, client psychology, and what separates a $150/hr freelancer from a $30/hr one.
 
 Your task: analyze the user's profile against the top 10 performers in their niche and produce surgical, high-impact rewrites — not summaries, not shorter versions. Better versions.
+
+---
+
+## SCORING ANALYSIS (what an expert analyst already found weak — use this to guide every rewrite decision)
+${scoringSummary}
+
+---
+
+## PRIORITY INSTRUCTIONS (based on scores above)
+${Object.entries(scoringResults)
+  .sort((a, b) => a[1].score - b[1].score)
+  .map(([key, val]) => {
+    const max: Record<string, number> = {
+      titleOptimization: 23,
+      overviewQuality: 29,
+      skillTagsCoverage: 18,
+      ratePositioning: 12,
+      engagementSignals: 18,
+    };
+    const pct = Math.round((val.score / (max[key] ?? 100)) * 100);
+    const priority = pct < 50 ? "🔴 CRITICAL — rewrite must directly fix this" 
+      : pct < 75 ? "🟡 IMPORTANT — meaningful improvement needed"
+      : "🟢 STRONG — preserve what works, minor polish only";
+    return `- ${key}: ${pct}% — ${priority}`;
+  })
+  .join("\n")}
+
+For 🔴 CRITICAL items: the rewrite must directly and specifically fix the exact weaknesses in the reasoning above. Do not make cosmetic changes — fix the root cause.
+For 🟡 IMPORTANT items: improve meaningfully but do not overhaul what is already working.
+For 🟢 STRONG items: preserve the existing approach. Do not change what is already winning. Small polish only.
 
 ---
 
@@ -158,6 +195,7 @@ ${userProfile.description?.slice(0, 1200) ?? "N/A"}
 - Include platform, niche, or tech stack keywords clients actually search for
 - Max 10 words, no filler words like "expert", "passionate", "dedicated"
 - Do NOT copy a top performer title — synthesize the best elements
+- Directly address any weaknesses identified in the scoring analysis above
 
 ### OVERVIEW REWRITE
 - CRITICAL: The rewritten overview must be AT LEAST as long as the original. Never shorten it.
@@ -170,9 +208,11 @@ ${userProfile.description?.slice(0, 1200) ?? "N/A"}
 - Remove only genuine filler ("I am passionate about...", "Feel free to reach out")
 - End with a strong CTA that creates urgency or specificity
 - The rewritten overview should feel like an upgrade of the original — same voice, higher impact
+- Directly fix every specific weakness called out in the scoring analysis above
 
 ### SKILLS REWRITE
 - Cross-reference user skills against top performer skills
+- Use the scoring analysis to identify exactly which missing skills were flagged
 - Identify high-value missing skills the user likely has based on their overview
 - Reorder to put highest search-volume / highest-value skills first
 - Return top 15 skills in priority order
