@@ -6,9 +6,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-
-    const userId = req.nextUrl.searchParams.get('user_id');
+const { id } = await params;
+const profileId = parseInt(id, 10);  
+const userId = req.nextUrl.searchParams.get('user_id');
 
     const result = await pool.query(
       `
@@ -18,7 +18,7 @@ export async function GET(
       AND user_id = $2
       LIMIT 1
       `,
-      [id, userId]
+      [profileId, userId]
     );
 
     if (result.rows.length === 0) {
@@ -56,8 +56,9 @@ export async function POST(
   const client = await pool.connect();
 
   try {
+    
     const { id } = await params;
-
+    const profileId = parseInt(id, 10);
     const body = await req.json();
 
     const {
@@ -77,7 +78,7 @@ export async function POST(
       WHERE user_id = $1
       AND freelancer_profile_id = $2
       `,
-      [user_id, id]
+      [user_id, profileId]
     );
 
     let analysisId: number;
@@ -288,7 +289,7 @@ export async function PUT(
 
   try {
     const { id } = await params;
-
+    const profileId = parseInt(id, 10);
     const body = await req.json();
 
     const {
@@ -310,7 +311,7 @@ export async function PUT(
       [
         suggested_title,
         suggested_overview,
-        id,
+        profileId,
         user_id,
       ]
     );

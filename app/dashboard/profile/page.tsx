@@ -11,27 +11,42 @@ import { useAnalyze } from "@/contexts/analyze-context";
 import { useAuth } from "@/contexts/auth-context";
 import { saveAnalysis, saveProfile } from "@/lib/api";
 import { Freelancer } from "@/lib/dataStructuring";
+import axios from "axios";
 
 const DEMO_PROFILE: Freelancer = {
-  searchUrl: "https://www.upwork.com/nx/search/talent/?nbs=1&q=ai%20enabled%20game%20developer",
-  name: "Mukkaram S.",
-  profileId: "014cca439911526613",
-  profileUrl: "https://www.upwork.com/freelancers/~014cca439911526613",
-  title: "Unity Game Developer | VR/AR Specialist | Multiplayer Game",
-  location: "Pakistan",
-  avatarUrl: "https://www.upwork.com/profile-portraits/c1bL2RUwHgshMnLL0A5Bui0cLqape2ujipJWVImLwRK1rxaBVDqeumL3e_r6y8mPdP",
-  rate: 25,
-  jobSuccess: 100,
-  earnings: "$100K+ earned",
-  hasAvailableNow: true,
-  hasTopRated: true,
-  skills: ["Unity", "AR & VR Development", "VR Application", "Online Multiplayer", "Multiplayer", "Photon Unity Networking", "Meta Quest", "PC Game", "Game Development", "AI Model Integration"],
-  description: `I work deep in the code, solving real problems across multiplayer systems, VR/AR, Web3, and AI-driven gameplay. With 7+ years of hands-on Unity development and 100+ shipped projects across Meta Store, Steam, Web3 platforms, Google Play, and the Apple App Store.`,
-  jobsRelatedCount: 16,
-  scrapedAt: "2026-04-01T08:36:42.806Z",
-};
-
-// maps snake_case DB row to Freelancer type
+  "searchUrl": "https://www.upwork.com/nx/search/talent/?nbs=1&q=ai%20enabled%20game%20developer",
+  "name": "Muhammad Arif H.",
+  "profileId": "01a9936b6343f6bd40",
+  "profileUrl": "https://www.upwork.com/freelancers/~01a9936b6343f6bd40?referrer_url_path=/nx/search/talent/",
+  "title": "Top-Rated Unity Game Developer | Multiplayer | Game Developer | VR/AR",
+  "location": "Pakistan",
+  "avatarUrl": "https://www.upwork.com/profile-portraits/c1agzH8GEElTk2JeAbWyE6iUNXFhqzrmuVbIQt4bqAiUDQf3mSZo0mISOgI85usTIK",
+  "rate": 30,
+  "jobSuccess": 100,
+  "earnings": "",
+  "hasAvailableNow": true,
+  "hasTopRated": true,
+  "skills": [
+    "Game Development",
+    "Unity",
+    "Mobile Game Development",
+    "Multiplayer",
+    "AR & VR Development",
+    "Mobile Game",
+    "Game Design",
+    "Game Level",
+    "Game Controller",
+    "Game UI/UX Design",
+    "Unreal Engine",
+    "3D Game Art",
+    "2D Game Art",
+    "Card Game",
+    "C#"
+  ],
+  "description": "I’m a Top-Rated Unity Game Developer with 10+ years of experience creating high-performance, engaging games for Mobile, PC, and WebGL. I help studios, startups, and indie teams turn ideas into production-ready, scalable, and visually polished games from core gameplay mechanics and user experience to full live deployment. 🔥 Core Game Development Expertise Unity 2D & 3D Game Development Cross-Platform Game Builds (Android, iOS, PC, WebGL) Gameplay Mechanics, Progression, and Balancing Game UI & UX, Menus, HUDs, and Animations Performance Optimization (FPS, memory, loading speed) Modular & Reusable Game Systems Multiplayer Features using Photon / Mirror / Netcode AR/VR & Interactive Experiences 🧩 What I Can Build Full mobile or PC games (casual, action, strategy, or simulation) Scalable gameplay systems & reusable frameworks Matchmaking, leaderboards, and progression systems Live updates, analytics & in-app content management Interactive AR/VR or WebGL-based projects ⭐ Why Clients Choose Me ✔ Top-Rated with 100% Job Success ✔ 10+ years of diverse Unity development experience ✔ Strong system design & debugging skills ✔ Clear communication, reliable delivery, and fast iteration I understand what makes a game feel fun, optimized, and stable. My focus is always on delivering production-quality games with clean architecture, creative design, and smooth player experience. 👉 Let’s discuss how to bring your game idea to life from concept to live release.",
+  "jobsRelatedCount": 20,
+  "scrapedAt": "2026-04-01T08:36:42.806Z"
+}
 function mapDbProfile(row: any): Freelancer {
   return {
     profileId: row.profile_id,
@@ -68,23 +83,26 @@ export default function ProfilePage() {
   const descLines = activeProfile?.description?.split("\n");
   const descPreview = descLines?.slice(0, 4).join("\n");
 
-  async function handleAnalyze() {
-    setLoading(true);
-    try {
-      const saved = await saveProfile(dbUser.id, DEMO_PROFILE);
-      if (saved.success) {
-        const analysisResult = await analyze(DEMO_PROFILE);
-        await saveAnalysis(saved.freelancerProfileId, {
-          ...analysisResult,
-          user_id: dbUser.id,
-        });
+async function handleAnalyze() {
+  setLoading(true);
+  try {
+    const saved = await saveProfile(dbUser.id, DEMO_PROFILE);
+
+    if (saved.success) {
+      const res = await axios.post("/api/analyze", { profile: DEMO_PROFILE });
+
+      if (res.data.success) {
+        await saveAnalysis(saved.freelancerProfileId, dbUser.id, res.data.data);
         setProfile(DEMO_PROFILE);
         setAnalyzed(true);
       }
-    } finally {
-      setLoading(false);
     }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
   }
+}
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
