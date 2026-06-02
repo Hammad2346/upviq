@@ -92,12 +92,13 @@ Award points based on:
 ---
 
 ## REASONING RULES
-- Each reasoning string must be 2–4 sentences
+- Each reasoning string must be 2 sentences
 - Be specific: reference actual title words, specific skills, actual rate numbers, actual job success %
 - Compare directly to top performers: "Top performers average $${avgRate}/hr, user is at $${userProfile.rate}/hr which..."
 - Never be vague: "good overview" is not acceptable reasoning — explain exactly what is strong or weak and why it affects score
 - For skillTagsCoverage: always end the reasoning with "Missing high-value skills: X, Y, Z" listing the top 3-5 skills from the benchmark the user does not have
 - For skillTagsCoverage: also end with "Add immediately: [skill1, skill2, skill3]" so the user knows exactly what to add
+- But most importently give the reason why score is not perfect. what is lacking. Keep the praise part small and criticism part large and well describing the real issue
 ---
 
 ## OUTPUT FORMAT
