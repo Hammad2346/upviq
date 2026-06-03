@@ -32,6 +32,30 @@ async function callGroq(prompt: string): Promise<string> {
   return data.choices[0].message.content;
 }
 
+async function callDeepSeek(prompt: string): Promise<string> {
+  const res = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "deepseek-v4-flash",
+      temperature: 0.3,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+if (!res.ok) {
+    const err = await res.text();
+    console.error(`[callDeepSeek] ${res.status} ${res.statusText}:`, err);
+    throw new Error(`DeepSeek error ${res.status}: ${err}`);
+  }
+
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
 function parseJSON<T>(raw: string): T {
   const cleaned = raw.replace(/```json|```/g, "").trim();
   return JSON.parse(cleaned);
@@ -138,7 +162,8 @@ export async function POST(req: NextRequest) {
     };
 
     return NextResponse.json({ success: true, data: result });
-  } catch (err: any) {
+   } catch (err: any) {
+    console.error("[/api/analyze] error:", err);
     return NextResponse.json(
       { success: false, error: err.message },
       { status: 500 }
