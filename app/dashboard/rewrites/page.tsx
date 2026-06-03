@@ -152,73 +152,66 @@ export default function RewritesPage() {
     fetchRewrite();
   }, [fetchRewrite]);
 
-  async function generateRewrites() {
-    if (!dbProfile || !dbUser || !dbAiAnalysis) return;
+async function generateRewrites() {
+  if (!dbProfile?.id || !dbUser?.id || !dbAiAnalysis) return;
 
-    setGenerating(true);
-    setGenerateError("");
+  setGenerating(true);
+  setGenerateError("");
 
-    const analysis = (dbAiAnalysis as any)?.data ?? dbAiAnalysis;
+  try {
+    const freshRes = await axios.get(
+      `/api/profiles/${dbProfile.id}/analysis?user_id=${dbUser.id}`
+    );
+    if (!freshRes.data.success) throw new Error("Could not fetch latest analysis");
+    
+    const analysis = freshRes.data.data;
 
-    const scoring: Record<string, { score: number; reasoning: string }> = {
-      titleOptimization: {
-        score: analysis.title_score,
-        reasoning: analysis.title_reasoning,
-      },
-      overviewQuality: {
-        score: analysis.overview_score,
-        reasoning: analysis.overview_reasoning,
-      },
-      skillTagsCoverage: {
-        score: analysis.skills_score,
-        reasoning: analysis.skills_reasoning,
-      },
-      ratePositioning: {
-        score: analysis.rate_score,
-        reasoning: analysis.rate_reasoning,
-      },
-      engagementSignals: {
-        score: analysis.engagement_score,
-        reasoning: analysis.engagement_reasoning,
-      },
+    const scoring = {
+      titleOptimization: { score: analysis.title_score, reasoning: analysis.title_reasoning },
+      overviewQuality:   { score: analysis.overview_score, reasoning: analysis.overview_reasoning },
+      skillTagsCoverage: { score: analysis.skills_score, reasoning: analysis.skills_reasoning },
+      ratePositioning:   { score: analysis.rate_score, reasoning: analysis.rate_reasoning },
+      engagementSignals: { score: analysis.engagement_score, reasoning: analysis.engagement_reasoning },
     };
+
+    const profileRes = await axios.get(`/api/profiles/${dbUser.id}`);
+    const freshProfile = profileRes.data;
 
     const profile = {
-      profileId:        dbProfile.profile_id,
-      name:             dbProfile.name,
-      title:            dbProfile.title,
-      description:      dbProfile.description,
-      profileUrl:       dbProfile.profile_url,
-      location:         dbProfile.location,
-      avatarUrl:        dbProfile.avatar_url,
-      rate:             Number(dbProfile.hourly_rate),
-      jobSuccess:       dbProfile.job_success,
-      earnings:         dbProfile.earnings,
-      hasAvailableNow:  dbProfile.available_now,
-      hasTopRated:      dbProfile.top_rated,
-      skills:           dbProfile.skills ?? [],
-      jobsRelatedCount: dbProfile.jobs_related_count,
-      scrapedAt:        dbProfile.scraped_at,
+      profileId:        freshProfile.profile_id,
+      name:             freshProfile.name,
+      title:            freshProfile.title,
+      description:      freshProfile.description,
+      profileUrl:       freshProfile.profile_url,
+      location:         freshProfile.location,
+      avatarUrl:        freshProfile.avatar_url,
+      rate:             Number(freshProfile.hourly_rate),
+      jobSuccess:       freshProfile.job_success,
+      earnings:         freshProfile.earnings,
+      hasAvailableNow:  freshProfile.available_now,
+      hasTopRated:      freshProfile.top_rated,
+      skills:           freshProfile.skills ?? [],
+      jobsRelatedCount: freshProfile.jobs_related_count,
+      scrapedAt:        freshProfile.scraped_at,
     };
 
-    try {
-      const res = await axios.post(`/api/rewrite/${dbProfile.id}`, {
-        user_id: dbUser.id,
-        profile,
-        scoring,
-      });
+    const res = await axios.post(`/api/rewrite/${dbProfile.id}`, {
+      user_id: dbUser.id,
+      profile,
+      scoring,
+    });
 
-      if (res.data.success) {
-        await fetchRewrite();
-      }
-    } catch (err: any) {
-      setGenerateError(
-        err.response?.data?.error ?? err.message ?? "Failed to generate rewrites"
-      );
-    } finally {
-      setGenerating(false);
+    if (res.data.success) {
+      await fetchRewrite();
     }
+  } catch (err: any) {
+    setGenerateError(
+      err.response?.data?.error ?? err.message ?? "Failed to generate rewrites"
+    );
+  } finally {
+    setGenerating(false);
   }
+}
 
   function updateCard(id: string, patch: Partial<RewriteCard>) {
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));

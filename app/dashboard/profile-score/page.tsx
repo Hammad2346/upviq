@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { useAnalyze } from "@/contexts/analyze-context";
 import { useAuth } from "@/contexts/auth-context";
+import axios from "axios";
 
 const TRAJECTORY = [
   { day: "Day 1",  score: 62 },
@@ -204,9 +205,8 @@ function MiniStat({ value, label, green }: { value: string; label: string; green
 
 export default function ProfileScorePage() {
   const { loading, error, analyze } = useAnalyze();
-  const { dbProfile, dbAiAnalysis, dbUser } = useAuth();
+  const { dbProfile, dbAiAnalysis, dbUser, refreshProfile } = useAuth();
   const analysis = (dbAiAnalysis as any)?.data ?? dbAiAnalysis;
-  console.log(analysis)
   const overallScore = analysis?.overall_score ?? 0;
   const SCORE_START  = 62;
   const SCORE_GAIN   = overallScore - SCORE_START;
@@ -223,26 +223,31 @@ export default function ProfileScorePage() {
       }))
     : [];
 
-  function handleRecompute() {
-    if (!dbProfile) return;
-    analyze({
-      profileId:       dbProfile.profile_id,
-      name:            dbProfile.name,
-      title:           dbProfile.title,
-      description:     dbProfile.description,
-      profileUrl:      dbProfile.profile_url,
-      location:        dbProfile.location,
-      avatarUrl:       dbProfile.avatar_url,
-      rate:            Number(dbProfile.hourly_rate),
-      jobSuccess:      dbProfile.job_success,
-      earnings:        dbProfile.earnings,
-      hasAvailableNow: dbProfile.available_now,
-      hasTopRated:     dbProfile.top_rated,
-      skills:          dbProfile.skills ?? [],
-      jobsRelatedCount: dbProfile.jobs_related_count,
-      scrapedAt:       dbProfile.scraped_at,
-    } as any);
-  }
+async function handleRecompute() {
+  if (!dbUser?.id) return;
+  
+  const res = await axios.get(`/api/profiles/${dbUser.id}`);
+  const freshProfile = res.data;
+  if (!freshProfile) return;
+
+  analyze({
+    profileId:        freshProfile.profile_id,
+    name:             freshProfile.name,
+    title:            freshProfile.title,
+    description:      freshProfile.description,
+    profileUrl:       freshProfile.profile_url,
+    location:         freshProfile.location,
+    avatarUrl:        freshProfile.avatar_url,
+    rate:             Number(freshProfile.hourly_rate),
+    jobSuccess:       freshProfile.job_success,
+    earnings:         freshProfile.earnings,
+    hasAvailableNow:  freshProfile.available_now,
+    hasTopRated:      freshProfile.top_rated,
+    skills:           freshProfile.skills ?? [],
+    jobsRelatedCount: freshProfile.jobs_related_count,
+    scrapedAt:        freshProfile.scraped_at,
+  } as any);
+}
 
   return (
     <div className="min-h-screen space-y-6 p-4 sm:p-6">

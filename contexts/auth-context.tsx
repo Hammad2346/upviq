@@ -9,134 +9,94 @@ import {
 } from "react";
 
 import { auth } from "@/lib/firebase";
-
-import {
-  onAuthStateChanged,
-  User as FirebaseUser,
-} from "firebase/auth";
-
-import {
-  usePathname,
-  useRouter,
-} from "next/navigation";
-
+import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
-
 import { getAnalysis } from "@/lib/api";
 
 type AuthContextType = {
-  firebaseUser: FirebaseUser | null;
-
-  dbUser: any;
-
-  dbProfile: any;
-
-  dbAiAnalysis: any;
-
-  loading: boolean;
-
-  refreshProfile: () => Promise<void>;
-
+  firebaseUser:    FirebaseUser | null;
+  dbUser:          any;
+  dbProfile:       any;
+  dbAiAnalysis:    any;
+  loading:         boolean;
+  refreshProfile:  () => Promise<void>;
   refreshAnalysis: () => Promise<void>;
-
-  refreshAll: () => Promise<void>;
+  refreshAll:      () => Promise<void>;
 };
 
 const authContext = createContext<AuthContextType>({
-  firebaseUser: null,
-
-  dbUser: null,
-
-  dbProfile: null,
-
-  dbAiAnalysis: null,
-
-  loading: true,
-
-  refreshProfile: async () => {},
-
+  firebaseUser:    null,
+  dbUser:          null,
+  dbProfile:       null,
+  dbAiAnalysis:    null,
+  loading:         true,
+  refreshProfile:  async () => {},
   refreshAnalysis: async () => {},
-
-  refreshAll: async () => {},
+  refreshAll:      async () => {},
 });
 
-export function AuthContext({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const [firebaseUser, setFirebaseUser] =
-    useState<FirebaseUser | null>(null);
-
-  const [dbUser, setDbUser] = useState<any>(null);
-
-  const [dbProfile, setDbProfile] =
-    useState<any>(null);
-
-  const [dbAiAnalysis, setDbAiAnalysis] =
-    useState<any>(null);
-
-  const [loading, setLoading] = useState(true);
+export function AuthContext({ children }: { children: ReactNode }) {
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [dbUser,       setDbUser]       = useState<any>(null);
+  const [dbProfile,    setDbProfile]    = useState<any>(null);
+  const [dbAiAnalysis, setDbAiAnalysis] = useState<any>(null);
+  const [loading,      setLoading]      = useState(true);
 
   const pathname = usePathname();
-
-  const router = useRouter();
+  const router   = useRouter();
 
   async function fetchDbUser(email: string) {
     try {
-      const res = await axios.get(
-        `/api/users?email=${email}`
-      );
-
+      const res = await axios.get(`/api/users?email=${email}`);
       setDbUser(res.data);
-
       return res.data;
     } catch {
       setDbUser(null);
-
       return null;
     }
   }
 
-  async function refreshProfile() {
-    if (!dbUser?.id) {
-      setDbProfile(null);
-
-      return;
-    }
-
+  async function fetchProfile(userId: number) {
     try {
-      const res = await axios.get(
-        `/api/profiles/${dbUser.id}`
-      );
-
+      const res = await axios.get(`/api/profiles/${userId}`);
       setDbProfile(res.data);
+      return res.data;
     } catch {
       setDbProfile(null);
+      return null;
     }
   }
 
-  async function refreshAnalysis() {
-    if (!dbProfile?.id || !dbProfile?.user_id) {
+  async function fetchAnalysis(profile: any) {
+    if (!profile?.id || !profile?.user_id) {
       setDbAiAnalysis(null);
-
       return;
     }
-
     try {
-      const analysis = await getAnalysis(
-        dbProfile.id,
-        dbProfile.user_id
-      );
-
+      const analysis = await getAnalysis(profile.id, profile.user_id);
       setDbAiAnalysis(analysis);
     } catch {
       setDbAiAnalysis(null);
     }
   }
 
+  async function refreshProfile() {
+    if (!dbUser?.id) {
+      setDbProfile(null);
+      return;
+    }
+    await fetchProfile(dbUser.id);
+  }
+
+  async function refreshAnalysis() {
+    await fetchAnalysis(dbProfile);
+  }
+
   async function refreshAll() {
-    await refreshProfile();
+    if (!dbUser?.id) return;
+    const freshProfile = await fetchProfile(dbUser.id);
+    await fetchAnalysis(freshProfile);
   }
 
   function clearUserState() {
@@ -146,86 +106,44 @@ export function AuthContext({
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (fbUser) => {
-        setLoading(true);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setLoading(true);
+      setFirebaseUser(fbUser);
 
-        setFirebaseUser(fbUser);
-
-        if (fbUser) {
-          const user = await fetchDbUser(
-            fbUser.email || ""
-          );
-
-          if (user) {
-            try {
-              const profileRes = await axios.get(
-                `/api/profiles/${user.id}`
-              );
-
-              const profile = profileRes.data;
-
-              setDbProfile(profile);
-
-              try {
-                const analysis = await getAnalysis(
-                  profile.id,
-                  profile.user_id
-                );
-
-                setDbAiAnalysis(analysis);
-              } catch {
-                setDbAiAnalysis(null);
-              }
-            } catch {
-              setDbProfile(null);
-
-              setDbAiAnalysis(null);
-            }
+      if (fbUser) {
+        const user = await fetchDbUser(fbUser.email || "");
+        if (user) {
+          const profile = await fetchProfile(user.id);
+          if (profile) {
+            await fetchAnalysis(profile);
           }
-        } else {
-          clearUserState();
         }
-
-        setLoading(false);
+      } else {
+        clearUserState();
       }
-    );
+
+      setLoading(false);
+    });
 
     return unsubscribe;
   }, []);
 
   useEffect(() => {
-    if (
-      !loading &&
-      !firebaseUser &&
-      pathname.startsWith("/dashboard")
-    ) {
+    if (!loading && !firebaseUser && pathname.startsWith("/dashboard")) {
       router.replace("/login");
     }
   }, [loading, firebaseUser, pathname, router]);
-
-  useEffect(() => {
-    refreshAnalysis();
-  }, [dbProfile]);
 
   return (
     <authContext.Provider
       value={{
         firebaseUser,
-
         dbUser,
-
         dbProfile,
-
         dbAiAnalysis,
-
         loading,
-
         refreshProfile,
-
         refreshAnalysis,
-
         refreshAll,
       }}
     >
@@ -234,5 +152,4 @@ export function AuthContext({
   );
 }
 
-export const useAuth = () =>
-  useContext(authContext);
+export const useAuth = () => useContext(authContext);
