@@ -4,114 +4,105 @@ export function buildScoringPrompt(
   userProfile: FreelancerProfile,
   topProfiles: FreelancerProfile[]
 ): string {
-  const topSummaries = topProfiles.map((p, i) => `
---- Top Performer #${i + 1} ---
-Title: ${p.title}
-Rate: $${p.rate}/hr
-Job Success: ${p.jobSuccess}%
-Top Rated: ${p.hasTopRated}
-Skills: ${p.skills.join(", ")}
-Overview (first 400 chars): ${p.description?.slice(0, 400) ?? "N/A"}
-  `.trim()).join("\n\n");
+  const avgRate = Math.round(
+    topProfiles.reduce((s, p) => s + (p.rate ?? 0), 0) / topProfiles.length
+  );
+  const avgJobSuccess = Math.round(
+    topProfiles.reduce((s, p) => s + (p.jobSuccess ?? 0), 0) / topProfiles.length
+  );
+  const topRatedCount = topProfiles.filter((p) => p.hasTopRated).length;
 
-  const avgRate = Math.round(topProfiles.reduce((s, p) => s + (p.rate ?? 0), 0) / topProfiles.length);
-  const avgJobSuccess = Math.round(topProfiles.reduce((s, p) => s + (p.jobSuccess ?? 0), 0) / topProfiles.length);
-  const topRatedCount = topProfiles.filter(p => p.hasTopRated).length;
-  const allTopSkills = [...new Set(topProfiles.flatMap(p => p.skills))].slice(0, 30).join(", ");
+  const skillFrequency: Record<string, number> = {};
+  topProfiles.forEach((p) =>
+    p.skills?.forEach((s) => {
+      skillFrequency[s] = (skillFrequency[s] ?? 0) + 1;
+    })
+  );
+  const topSkills = Object.entries(skillFrequency)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([s]) => s)
+    .join(", ");
 
-  return `
-You are a senior Upwork marketplace analyst with deep knowledge of how Upwork's search ranking algorithm works and what signals clients use to make hiring decisions. You have reviewed thousands of profiles across every category.
+  const topTitles = topProfiles.map((p) => p.title).join(" | ");
 
-Your task: score the user's profile across 5 parameters by comparing it against the top 10 performing profiles in their exact niche. Be precise, critical, and fair. Do not inflate scores — a score should reflect real competitive standing, not potential.
+  const userSkillSet = new Set(userProfile.skills.map((s) => s.toLowerCase()));
+  const missingSkills = Object.entries(skillFrequency)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .filter(([s]) => !userSkillSet.has(s.toLowerCase()))
+    .map(([s]) => s);
 
----
+  return `You are a senior Upwork marketplace analyst. Score this freelancer profile against the top 10 performers in their niche. Be critical. Do not inflate scores.
 
-## BENCHMARK SUMMARY (top 10 in this niche)
-- Average hourly rate: $${avgRate}/hr
-- Average job success: ${avgJobSuccess}%
-- Top Rated badge: ${topRatedCount}/10 profiles have it
-- Most common skills: ${allTopSkills}
-
-## TOP 10 PROFILES IN DETAIL
-${topSummaries}
-
----
+## NICHE BENCHMARK
+- Avg rate: $${avgRate}/hr | Avg job success: ${avgJobSuccess}% | Top Rated: ${topRatedCount}/10
+- Top titles: ${topTitles}
+- High-frequency skills: ${topSkills}
 
 ## USER PROFILE
 Title: ${userProfile.title}
-Rate: $${userProfile.rate}/hr
-Job Success: ${userProfile.jobSuccess}%
-Top Rated: ${userProfile.hasTopRated}
-Available Now: ${userProfile.hasAvailableNow}
-Related Jobs Completed: ${userProfile.jobsRelatedCount}
+Rate: $${userProfile.rate}/hr | Job Success: ${userProfile.jobSuccess}% | Top Rated: ${userProfile.hasTopRated} | Available Now: ${userProfile.hasAvailableNow}
+Jobs completed in niche: ${userProfile.jobsRelatedCount}
 Skills: ${userProfile.skills.join(", ")}
-Overview (first 1000 chars):
-${userProfile.description?.slice(0, 1000) ?? "N/A"}
+Overview (first 800 chars):
+${userProfile.description?.slice(0, 800) ?? "N/A"}
 
----
+## PRE-COMPUTED (use these directly, do not recalculate)
+- Skills user is missing from top performers: ${missingSkills.join(", ")}
+- Rate vs benchmark: user $${userProfile.rate}/hr vs avg $${avgRate}/hr (${userProfile.rate > avgRate ? "+" : ""}${userProfile.rate - avgRate}/hr)
+- Job success vs benchmark: ${userProfile.jobSuccess}% vs ${avgJobSuccess}% avg
 
-## SCORING PARAMETERS
+## SCORING
 
-### 1. Title Optimization — max 23 points
-Award points based on:
-- Keyword specificity: does it match how clients search in this niche? (0–8 pts)
-- Niche clarity: does it immediately communicate a specialization vs being generic? (0–7 pts)
-- Competitive alignment: how does it compare to top performer titles in structure and impact? (0–8 pts)
-Deduct for: vague words ("expert", "professional", "freelancer"), missing platform/tech keywords, titles that could apply to any niche
+### 1. titleOptimization — max 23 pts
+- Keyword specificity for how clients search in this niche (0–8)
+- Niche clarity vs generic (0–7)
+- Competitive alignment vs top titles above (0–8)
+Deduct for: vague words (expert/professional/freelancer), missing platform/tech keywords
 
-### 2. Overview Quality — max 29 points
-Award points based on:
-- Hook strength: do the first 2 sentences answer what you do, for whom, and what outcome in <300 chars? (0–8 pts)
-- Specificity: does it mention concrete technologies, platforms, methodologies, and experience depth? (0–7 pts)
-- Outcome language: does it describe results and impact, not just tasks? (0–7 pts)
-- Scannability and structure: headers, bullets, or clear sections that make it easy to read? (0–4 pts)
-- CTA quality: does it end with a specific, confident call to action? (0–3 pts)
-Deduct for: filler phrases ("passionate about", "feel free"), vague claims without evidence, walls of text with no structure
+### 2. overviewQuality — max 29 pts
+- Hook: first 2 sentences answer what/for whom/what outcome in <300 chars (0–8)
+- Specificity: concrete tech, platforms, methodologies (0–7)
+- Outcome language: results not tasks (0–7)
+- Scannability: headers/bullets/clear sections (0–4)
+- CTA: specific confident close (0–3)
+Deduct for: filler phrases, vague claims, walls of text
 
-### 3. Skill Tags Coverage — max 18 points
-Award points based on:
-- Match rate: what % of the top 10 most common niche skills does the user have? (0–8 pts)
-- Priority ordering: are the highest-value skills listed first? (0–5 pts)
-- Tag quality: are all tags relevant and high-signal for this niche, no dilution? (0–5 pts)
-Deduct for: missing high-frequency skills from top performers, irrelevant or overly broad tags, low-value filler skills
-In the reasoning, you MUST list by name the top 3-5 skills from the benchmark that the user is missing and should add immediately. Format them as: "Missing high-value skills: X, Y, Z"
+### 3. skillTagsCoverage — max 18 pts
+- Match rate vs top 10 most common niche skills (0–8)
+- Priority ordering: highest-value skills listed first (0–5)
+- Tag quality: relevant, no dilution (0–5)
+The missing skills are already listed above — use them directly in reasoning.
 
-### 4. Rate Positioning — max 12 points
-Award points based on:
-- Competitive range: is the rate within ±20% of the niche average ($${avgRate}/hr)? (0–5 pts)
-- Rate-to-signal ratio: does the rate make sense relative to their job success, badge, and experience signals? (0–4 pts)
-- Strategic positioning: neither underpricing (signals low quality) nor severely overpricing without clear justification (0–3 pts)
+### 4. ratePositioning — max 12 pts
+- Within ±20% of niche avg $${avgRate}/hr (0–5)
+- Rate-to-signal ratio: makes sense vs job success + badge (0–4)
+- Strategic positioning: not underpricing or overpricing without justification (0–3)
 
-### 5. Engagement Signals — max 18 points
-Award points based on:
-- Job Success Score: ${avgJobSuccess}% is the niche average — score relative to that (0–6 pts)
-- Top Rated badge: present = full credit, absent = partial (0–5 pts)
-- Jobs completed in niche: volume signals proven demand and trust (0–4 pts)
-- Available Now: active availability is a ranking signal (0–3 pts)
-
----
+### 5. engagementSignals — max 18 pts
+- Job success vs ${avgJobSuccess}% niche avg (0–6)
+- Top Rated badge (0–5)
+- Jobs completed in niche: volume = trust (0–4)
+- Available Now (0–3)
 
 ## REASONING RULES
-- Each reasoning string must be 2 sentences
-- Be specific: reference actual title words, specific skills, actual rate numbers, actual job success %
-- Compare directly to top performers: "Top performers average $${avgRate}/hr, user is at $${userProfile.rate}/hr which..."
-- Never be vague: "good overview" is not acceptable reasoning — explain exactly what is strong or weak and why it affects score
-- For skillTagsCoverage: always end the reasoning with "Missing high-value skills: X, Y, Z" listing the top 3-5 skills from the benchmark the user does not have
-- For skillTagsCoverage: also end with "Add immediately: [skill1, skill2, skill3]" so the user knows exactly what to add
-- But most importently give the reason why score is not perfect. what is lacking. Keep the praise part small and criticism part large and well describing the real issue
----
+- 2–3 sentences per parameter
+- Lead with what is WRONG and why it costs points — criticism first, praise minimal
+- Be specific: quote actual title words, cite actual numbers, name actual skills
+- For skillTagsCoverage end with: "Missing high-value skills: X, Y, Z. Add immediately: [skill1, skill2, skill3]"
+- Never write vague praise like "good overview" — state exactly what is weak and what fixing it would do to the score
 
-## OUTPUT FORMAT
-Return ONLY a valid JSON object. No markdown, no backticks, no explanation outside the JSON.
+## OUTPUT
+Return ONLY valid JSON, no markdown, no backticks.
 
 {
-  "titleOptimization":  { "score": <0-23>,  "reasoning": "<2-4 sentences, specific, comparative>" },
-  "overviewQuality":    { "score": <0-29>,  "reasoning": "<2-4 sentences, specific, comparative>" },
-  "skillTagsCoverage":  { "score": <0-18>,  "reasoning": "<2-4 sentences, specific, comparative>" },
-  "ratePositioning":    { "score": <0-12>,  "reasoning": "<2-4 sentences, specific, comparative>" },
-  "engagementSignals":  { "score": <0-18>,  "reasoning": "<2-4 sentences, specific, comparative>" }
-}
-  `.trim();
+  "titleOptimization":  { "score": <0-23>, "reasoning": "<2-3 sentences, criticism-first, specific>" },
+  "overviewQuality":    { "score": <0-29>, "reasoning": "<2-3 sentences, criticism-first, specific>" },
+  "skillTagsCoverage":  { "score": <0-18>, "reasoning": "<2-3 sentences, ends with Missing high-value skills>" },
+  "ratePositioning":    { "score": <0-12>, "reasoning": "<2-3 sentences, criticism-first, specific>" },
+  "engagementSignals":  { "score": <0-18>, "reasoning": "<2-3 sentences, criticism-first, specific>" }
+}`.trim();
 }
 
 export function buildSuggestionsPrompt(
@@ -119,124 +110,112 @@ export function buildSuggestionsPrompt(
   topProfiles: FreelancerProfile[],
   scoringResults: Record<string, { score: number; reasoning: string }>
 ): string {
-  const topTitles = topProfiles.map(p => `- ${p.title}`).join("\n");
-  const topSkills = [...new Set(topProfiles.flatMap(p => p.skills))].slice(0, 30).join(", ");
+  const topTitles = topProfiles.map((p) => `- ${p.title}`).join("\n");
+
+  const skillFrequency: Record<string, number> = {};
+  topProfiles.forEach((p) =>
+    p.skills?.forEach((s) => {
+      skillFrequency[s] = (skillFrequency[s] ?? 0) + 1;
+    })
+  );
+  const topSkills = Object.entries(skillFrequency)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([s]) => s)
+    .join(", ");
+
   const topOverviews = topProfiles
-    .filter(p => p.description)
-    .slice(0, 3)
-    .map((p, i) => `### Top Performer ${i + 1}\n${p.description?.slice(0, 400)}`)
+    .filter((p) => p.description)
+    .slice(0, 2)
+    .map((p, i) => `### Top Performer ${i + 1}\n${p.description?.slice(0, 300)}`)
     .join("\n\n");
 
-  const scoringSummary = Object.entries(scoringResults)
-    .map(([key, val]) => `- ${key}: ${val.score} points — ${val.reasoning}`)
+  const maxScores: Record<string, number> = {
+    titleOptimization: 23,
+    overviewQuality: 29,
+    skillTagsCoverage: 18,
+    ratePositioning: 12,
+    engagementSignals: 18,
+  };
+
+  const priorities = Object.entries(scoringResults)
+    .sort((a, b) => {
+      const pctA = a[1].score / (maxScores[a[0]] ?? 100);
+      const pctB = b[1].score / (maxScores[b[0]] ?? 100);
+      return pctA - pctB;
+    })
+    .map(([key, val]) => {
+      const pct = Math.round((val.score / (maxScores[key] ?? 100)) * 100);
+      const flag =
+        pct < 50
+          ? "CRITICAL — rewrite must directly fix this"
+          : pct < 75
+          ? "IMPORTANT — meaningful improvement needed"
+          : "STRONG — preserve what works, minor polish only";
+      return `- ${key} (${pct}%): ${flag}\n  Weakness: ${val.reasoning}`;
+    })
     .join("\n");
 
-  return `
-You are a world-class Upwork profile strategist who has helped thousands of freelancers reach Top Rated Plus status. You deeply understand Upwork's search algorithm, client psychology, and what separates a $150/hr freelancer from a $30/hr one.
+  return `You are a world-class Upwork profile strategist. Produce surgical, high-impact rewrites based on the scoring analysis below.
 
-Your task: analyze the user's profile against the top 10 performers in their niche and produce surgical, high-impact rewrites — not summaries, not shorter versions. Better versions.
+## PRIORITY FIXES (ordered worst to best — address CRITICAL items first)
+${priorities}
 
----
-
-## SCORING ANALYSIS (what an expert analyst already found weak — use this to guide every rewrite decision)
-${scoringSummary}
-
----
-
-## PRIORITY INSTRUCTIONS (based on scores above)
-${Object.entries(scoringResults)
-  .sort((a, b) => a[1].score - b[1].score)
-  .map(([key, val]) => {
-    const max: Record<string, number> = {
-      titleOptimization: 23,
-      overviewQuality: 29,
-      skillTagsCoverage: 18,
-      ratePositioning: 12,
-      engagementSignals: 18,
-    };
-    const pct = Math.round((val.score / (max[key] ?? 100)) * 100);
-    const priority = pct < 50 ? "🔴 CRITICAL — rewrite must directly fix this" 
-      : pct < 75 ? "🟡 IMPORTANT — meaningful improvement needed"
-      : "🟢 STRONG — preserve what works, minor polish only";
-    return `- ${key}: ${pct}% — ${priority}`;
-  })
-  .join("\n")}
-
-For 🔴 CRITICAL items: the rewrite must directly and specifically fix the exact weaknesses in the reasoning above. Do not make cosmetic changes — fix the root cause.
-For 🟡 IMPORTANT items: improve meaningfully but do not overhaul what is already working.
-For 🟢 STRONG items: preserve the existing approach. Do not change what is already winning. Small polish only.
-
----
-
-## TOP PERFORMER TITLES (what is winning in this niche right now)
+## WINNING TITLES IN THIS NICHE
 ${topTitles}
 
-## MOST COMMON SKILLS ACROSS TOP PERFORMERS
+## HIGH-VALUE SKILLS IN THIS NICHE
 ${topSkills}
 
-## TOP PERFORMER OVERVIEW SAMPLES (study the tone, structure, and hooks)
+## TOP PERFORMER OVERVIEW SAMPLES (study hook structure and tone)
 ${topOverviews}
 
----
-
-## USER'S CURRENT PROFILE
-
+## USER CURRENT PROFILE
 Title: ${userProfile.title}
 Skills: ${userProfile.skills.join(", ")}
 Overview:
 ${userProfile.description?.slice(0, 1200) ?? "N/A"}
 
----
+## REWRITE RULES
 
-## YOUR REWRITE RULES — FOLLOW THESE EXACTLY
-
-### TITLE REWRITE
-- Study the top performer titles above — match their keyword density and specificity
-- Lead with the highest-value skill or outcome (e.g. "Unity Game Developer" not "Experienced Developer")
-- Include platform, niche, or tech stack keywords clients actually search for
-- Max 10 words, no filler words like "expert", "passionate", "dedicated"
+### TITLE
+- Max 10 words, lead with highest-value skill or outcome
+- Match keyword density of winning titles above
+- No filler: expert / passionate / dedicated / professional
+- Directly fix the CRITICAL/IMPORTANT weaknesses flagged above
 - Do NOT copy a top performer title — synthesize the best elements
-- Directly address any weaknesses identified in the scoring analysis above
 
-### OVERVIEW REWRITE
-- CRITICAL: The rewritten overview must be AT LEAST as long as the original. Never shorten it.
-- Keep every specific detail, technology, capability, and credential from the original
-- Restructure the opening hook — the first 2 sentences must answer: "What do you do, for whom, and what outcome do you deliver?" within 300 characters (this is what clients see before clicking "more")
-- After the hook, expand on the original content — do not compress or omit sections
-- Add outcome-oriented language where missing: instead of "I build X" write "I build X that [outcome]"
-- If the original uses emoji headers (🔥, 🧩, ⭐), keep them — they aid scannability
-- Mirror the tone and energy of the top performer overviews above
-- Remove only genuine filler ("I am passionate about...", "Feel free to reach out")
-- End with a strong CTA that creates urgency or specificity
-- The rewritten overview should feel like an upgrade of the original — same voice, higher impact
-- Directly fix every specific weakness called out in the scoring analysis above
+### OVERVIEW
+- Must be AT LEAST as long as the original — never shorten
+- Keep every specific tech, platform, credential, and capability from the original
+- Rewrite the opening hook: first 2 sentences must answer what/for whom/what outcome in <300 chars
+- Add outcome language where missing: "I build X that [outcome]" not "I build X"
+- Preserve emoji headers if present — they aid scannability
+- Remove only genuine filler: "I am passionate about…", "Feel free to reach out"
+- End with a strong specific CTA
+- Fix every weakness called out in the scoring analysis
 
-### SKILLS REWRITE
-- Cross-reference user skills against top performer skills
-- Use the scoring analysis to identify exactly which missing skills were flagged
-- Identify high-value missing skills the user likely has based on their overview
-- Reorder to put highest search-volume / highest-value skills first
-- Return top 15 skills in priority order
+### SKILLS
+- Use the missing skills from skillTagsCoverage reasoning — these are confirmed high-value gaps
+- Reorder: highest search-volume / highest-value skills first
+- Return top 15 in priority order
 
----
-
-## OUTPUT FORMAT
-Return ONLY a valid JSON object. No markdown, no backticks, no explanation outside the JSON.
+## OUTPUT
+Return ONLY valid JSON, no markdown, no backticks.
 
 {
   "title": {
-    "rewritten": "<improved title — keyword-rich, specific, max 10 words>",
+    "rewritten": "<improved title, max 10 words>",
     "reason": "<exactly what changed and why it will perform better>"
   },
   "overview": {
-    "rewritten": "<full improved overview — must be longer than or equal to the original, preserves all detail, stronger hook, outcome language, same structure>",
+    "rewritten": "<full improved overview, at least as long as original>",
     "reason": "<what was weak, what changed, what specific improvements were made>"
   },
   "skills": {
-    "missing": ["<high-value skill from top performers the user is missing>"],
-    "reorder": ["<skill 1>", "<skill 2>", "...top 15 in priority order"],
-    "reason": "<which skills were moved up, which added, and why>"
+    "missing": ["<high-value skill from top performers user is missing>"],
+    "reorder": ["<skill 1>", "<skill 2>"],
+    "reason": "<which skills moved up, which added, and why>"
   }
-}
-  `.trim();
+}`.trim();
 }

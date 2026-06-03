@@ -1,16 +1,16 @@
 export type { Freelancer as FreelancerProfile } from "@/lib/dataStructuring";
 
 export type ParameterScore = {
-  score: number;       // actual points scored
-  maxScore: number;    // max possible for this parameter
-  percentage: number;  // score/maxScore * 100
-  reasoning: string;   // why this score was given
+  score: number;
+  maxScore: number;
+  percentage: number;
+  reasoning: string;
 };
 
 export type AnalyzeResult = {
   profileId: string;
   name: string;
-  overallScore: number; // 0–100
+  overallScore: number;
   parameters: {
     titleOptimization:  ParameterScore;
     overviewQuality:    ParameterScore;
@@ -18,28 +18,29 @@ export type AnalyzeResult = {
     ratePositioning:    ParameterScore;
     engagementSignals:  ParameterScore;
   };
-  suggestions: {
-    title: {
-      current:   string;
-      rewritten: string;
-      reason:    string;
-    };
-    overview: {
-      current:   string;
-      rewritten: string;
-      reason:    string;
-    };
-    skills: {
-      current:  string[];
-      missing:  string[];
-      reorder:  string[];
-      reason:   string;
-    };
-  };
   benchmarks: {
-    avgRateTopProfiles:     number;
-    avgJobSuccessTop:       number;
-    commonSkillsInTop10:    string[];
-    topRatedCountInTop10:   number;
+    avgRateTopProfiles:   number;
+    avgJobSuccessTop:     number;
+    commonSkillsInTop10:  string[];
+    topRatedCountInTop10: number;
   };
+};
+
+export type RewriteResult = {
+  id: number;
+  user_id: number;
+  freelancer_profile_id: number;
+  suggested_title: string;
+  title_reason: string;
+  suggested_overview: string;
+  overview_reason: string;
+  skills_reason: string;
+  skills: Array<{
+    id: number;
+    skill: string;
+    skill_type: "missing" | "reorder";
+    position: number;
+  }>;
+  created_at: string;
+  updated_at: string;
 };

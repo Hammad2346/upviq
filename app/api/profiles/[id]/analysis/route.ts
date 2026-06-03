@@ -6,44 +6,29 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-const { id } = await params;
-const profileId = parseInt(id, 10);  
-const userId = req.nextUrl.searchParams.get('user_id');
+    const { id } = await params;
+    const profileId = parseInt(id, 10);
+    const userId = req.nextUrl.searchParams.get('user_id');
 
     const result = await pool.query(
-      `
-      SELECT *
-      FROM profile_ai_analyses
-      WHERE freelancer_profile_id = $1
-      AND user_id = $2
-      LIMIT 1
-      `,
+      `SELECT * FROM profile_ai_analyses
+       WHERE freelancer_profile_id = $1 AND user_id = $2
+       LIMIT 1`,
       [profileId, userId]
     );
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Analysis not found',
-        },
+        { success: false, error: 'Analysis not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: result.rows[0],
-    });
-
+    return NextResponse.json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error(error);
-
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to fetch analysis',
-      },
+      { success: false, error: 'Failed to fetch analysis' },
       { status: 500 }
     );
   }
@@ -56,28 +41,17 @@ export async function POST(
   const client = await pool.connect();
 
   try {
-    
     const { id } = await params;
     const profileId = parseInt(id, 10);
     const body = await req.json();
 
-    const {
-      user_id,
-      overallScore,
-      parameters,
-      suggestions,
-      benchmarks,
-    } = body;
+    const { user_id, overallScore, parameters, benchmarks } = body;
 
     await client.query('BEGIN');
 
     const existing = await client.query(
-      `
-      SELECT id
-      FROM profile_ai_analyses
-      WHERE user_id = $1
-      AND freelancer_profile_id = $2
-      `,
+      `SELECT id FROM profile_ai_analyses
+       WHERE user_id = $1 AND freelancer_profile_id = $2`,
       [user_id, profileId]
     );
 
@@ -87,9 +61,7 @@ export async function POST(
       analysisId = existing.rows[0].id;
 
       await client.query(
-        `
-        UPDATE profile_ai_analyses
-        SET
+        `UPDATE profile_ai_analyses SET
           overall_score = $1,
 
           title_score = $2,
@@ -117,17 +89,12 @@ export async function POST(
           engagement_percentage = $20,
           engagement_reasoning = $21,
 
-          suggested_title = $22,
-          suggested_overview = $23,
-
-          avg_rate_top_profiles = $24,
-          avg_job_success_top = $25,
-          top_rated_count_in_top10 = $26,
+          avg_rate_top_profiles = $22,
+          avg_job_success_top = $23,
+          top_rated_count_in_top10 = $24,
 
           updated_at = NOW()
-
-        WHERE id = $27
-        `,
+        WHERE id = $25`,
         [
           overallScore,
 
@@ -155,9 +122,6 @@ export async function POST(
           parameters.engagementSignals.maxScore,
           parameters.engagementSignals.percentage,
           parameters.engagementSignals.reasoning,
-
-          suggestions.title.rewritten,
-          suggestions.overview.rewritten,
 
           benchmarks.avgRateTopProfiles,
           benchmarks.avgJobSuccessTop,
@@ -168,56 +132,22 @@ export async function POST(
       );
     } else {
       const inserted = await client.query(
-        `
-        INSERT INTO profile_ai_analyses (
-          user_id,
-          freelancer_profile_id,
-
-          overall_score,
-
-          title_score,
-          title_max_score,
-          title_percentage,
-          title_reasoning,
-
-          overview_score,
-          overview_max_score,
-          overview_percentage,
-          overview_reasoning,
-
-          skills_score,
-          skills_max_score,
-          skills_percentage,
-          skills_reasoning,
-
-          rate_score,
-          rate_max_score,
-          rate_percentage,
-          rate_reasoning,
-
-          engagement_score,
-          engagement_max_score,
-          engagement_percentage,
-          engagement_reasoning,
-
-          suggested_title,
-          suggested_overview,
-
-          avg_rate_top_profiles,
-          avg_job_success_top,
-          top_rated_count_in_top10
-        )
-        VALUES (
+        `INSERT INTO profile_ai_analyses (
+          user_id, freelancer_profile_id, overall_score,
+          title_score, title_max_score, title_percentage, title_reasoning,
+          overview_score, overview_max_score, overview_percentage, overview_reasoning,
+          skills_score, skills_max_score, skills_percentage, skills_reasoning,
+          rate_score, rate_max_score, rate_percentage, rate_reasoning,
+          engagement_score, engagement_max_score, engagement_percentage, engagement_reasoning,
+          avg_rate_top_profiles, avg_job_success_top, top_rated_count_in_top10
+        ) VALUES (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
           $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-          $21,$22,$23,$24,$25,$26,$27,$28
-        )
-        RETURNING id
-        `,
+          $21,$22,$23,$24,$25,$26
+        ) RETURNING id`,
         [
           user_id,
-          id,
-
+          profileId,
           overallScore,
 
           parameters.titleOptimization.score,
@@ -244,9 +174,6 @@ export async function POST(
           parameters.engagementSignals.maxScore,
           parameters.engagementSignals.percentage,
           parameters.engagementSignals.reasoning,
-
-          suggestions.title.rewritten,
-          suggestions.overview.rewritten,
 
           benchmarks.avgRateTopProfiles,
           benchmarks.avgJobSuccessTop,
@@ -259,21 +186,12 @@ export async function POST(
 
     await client.query('COMMIT');
 
-    return NextResponse.json({
-      success: true,
-      analysisId,
-    });
-
+    return NextResponse.json({ success: true, analysisId });
   } catch (error) {
     await client.query('ROLLBACK');
-
     console.error(error);
-
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to save analysis',
-      },
+      { success: false, error: 'Failed to save analysis' },
       { status: 500 }
     );
   } finally {
@@ -281,56 +199,34 @@ export async function POST(
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const client = await pool.connect();
+// export async function PUT(
+//   req: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
+//   const client = await pool.connect();
 
-  try {
-    const { id } = await params;
-    const profileId = parseInt(id, 10);
-    const body = await req.json();
+//   try {
+//     const { id } = await params;
+//     const profileId = parseInt(id, 10);
+//     const body = await req.json();
 
-    const {
-      user_id,
-      suggested_title,
-      suggested_overview,
-    } = body;
+//     const { user_id, suggested_title, suggested_overview } = body;
 
-    await client.query(
-      `
-      UPDATE profile_ai_analyses
-      SET
-        suggested_title = $1,
-        suggested_overview = $2,
-        updated_at = NOW()
-      WHERE freelancer_profile_id = $3
-      AND user_id = $4
-      `,
-      [
-        suggested_title,
-        suggested_overview,
-        profileId,
-        user_id,
-      ]
-    );
+//     await client.query(
+//       `UPDATE profile_ai_analyses
+//        SET suggested_title = $1, suggested_overview = $2, updated_at = NOW()
+//        WHERE freelancer_profile_id = $3 AND user_id = $4`,
+//       [suggested_title, suggested_overview, profileId, user_id]
+//     );
 
-    return NextResponse.json({
-      success: true,
-    });
-
-  } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to update analysis',
-      },
-      { status: 500 }
-    );
-  } finally {
-    client.release();
-  }
-}
+//     return NextResponse.json({ success: true });
+//   } catch (error) {
+//     console.error(error);
+//     return NextResponse.json(
+//       { success: false, error: 'Failed to update analysis' },
+//       { status: 500 }
+//     );
+//   } finally {
+//     client.release();
+//   }
+// }

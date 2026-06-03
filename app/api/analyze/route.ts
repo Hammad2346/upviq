@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { index } from "@/lib/pinecone";
 import { createEmbedding } from "@/lib/embed";
 import { structureFreelancerForVectorDB } from "@/lib/dataStructuring";
-import {
-  buildScoringPrompt,
-  buildSuggestionsPrompt,
-} from "@/lib/analyze/prompts";
+import { buildScoringPrompt } from "@/lib/analyze/prompts";
 import type {
   FreelancerProfile,
   AnalyzeResult,
@@ -42,30 +39,28 @@ function parseJSON<T>(raw: string): T {
 
 function computeBenchmarks(topProfiles: FreelancerProfile[]) {
   const avgRate = Math.round(
-    topProfiles.reduce((sum, p) => sum + (p.rate ?? 0), 0) / topProfiles.length,
+    topProfiles.reduce((sum, p) => sum + (p.rate ?? 0), 0) / topProfiles.length
   );
   const avgJobSuccess = Math.round(
     topProfiles.reduce((sum, p) => sum + (p.jobSuccess ?? 0), 0) /
-      topProfiles.length,
+      topProfiles.length
   );
   const skillFrequency: Record<string, number> = {};
   topProfiles.forEach((p) =>
     p.skills?.forEach((s) => {
       skillFrequency[s] = (skillFrequency[s] ?? 0) + 1;
-    }),
+    })
   );
   const commonSkills = Object.entries(skillFrequency)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
     .map(([skill]) => skill);
 
-  const topRatedCount = topProfiles.filter((p) => p.hasTopRated).length;
-
   return {
     avgRateTopProfiles: avgRate,
     avgJobSuccessTop: avgJobSuccess,
     commonSkillsInTop10: commonSkills,
-    topRatedCountInTop10: topRatedCount,
+    topRatedCountInTop10: topProfiles.filter((p) => p.hasTopRated).length,
   };
 }
 
@@ -77,7 +72,7 @@ export async function POST(req: NextRequest) {
     if (!userProfile?.profileId) {
       return NextResponse.json(
         { success: false, error: "Missing profile or profileId" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -97,26 +92,14 @@ export async function POST(req: NextRequest) {
 
     if (topProfiles.length === 0) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Not enough profiles in database to benchmark against",
-        },
-        { status: 400 },
+        { success: false, error: "Not enough profiles to benchmark against" },
+        { status: 400 }
       );
     }
 
-    const rawScores = await callGroq(
-      buildScoringPrompt(userProfile, topProfiles),
-    );
+    const rawScores = await callGroq(buildScoringPrompt(userProfile, topProfiles));
     const scoresData =
-      parseJSON<Record<string, { score: number; reasoning: string }>>(
-        rawScores,
-      );
-    const rawSuggestions = await callGroq(
-      buildSuggestionsPrompt(userProfile, topProfiles, scoresData),
-    );
-
-    const suggestData = parseJSON<AnalyzeResult["suggestions"]>(rawSuggestions);
+      parseJSON<Record<string, { score: number; reasoning: string }>>(rawScores);
 
     const maxScores: Record<string, number> = {
       titleOptimization: 23,
@@ -138,12 +121,12 @@ export async function POST(req: NextRequest) {
             reasoning: val.reasoning,
           } satisfies ParameterScore,
         ];
-      }),
+      })
     ) as AnalyzeResult["parameters"];
 
     const overallScore = Object.values(parameters).reduce(
       (sum, p) => sum + p.score,
-      0,
+      0
     );
 
     const result: AnalyzeResult = {
@@ -151,21 +134,6 @@ export async function POST(req: NextRequest) {
       name: userProfile.name,
       overallScore,
       parameters,
-      suggestions: {
-        ...suggestData,
-        title: {
-          current: userProfile.title,
-          ...suggestData.title,
-        },
-        overview: {
-          current: userProfile.description?.slice(0, 800) ?? "",
-          ...suggestData.overview,
-        },
-        skills: {
-          current: userProfile.skills,
-          ...suggestData.skills,
-        },
-      },
       benchmarks: computeBenchmarks(topProfiles),
     };
 
@@ -173,7 +141,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: err.message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
