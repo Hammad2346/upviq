@@ -14,16 +14,18 @@ async function callGroq(prompt: string): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "openai/gpt-oss-120b",
-      temperature: 0.3,
-      messages: [{ role: "user", content: prompt }],
-    }),
+  model: "openai/gpt-oss-120b",
+  temperature: 0.3,
+  response_format: { type: "json_object" },
+  messages: [{ role: "user", content: prompt }],
+}),
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Groq error: ${err}`);
-  }
+  const err = await res.text();
+  console.error(`[callGroq] ${res.status} ${res.statusText}:`, err);
+  throw new Error(`Groq error ${res.status}: ${err}`);
+}
 
   const data = await res.json();
   return data.choices[0].message.content;
@@ -52,9 +54,32 @@ async function callDeepSeek(prompt: string): Promise<string> {
 }
 
 function parseJSON<T>(raw: string): T {
-  const cleaned = raw.replace(/```json|```/g, "").trim();
-  return JSON.parse(cleaned);
+  let cleaned = raw
+    .replace(/```json\s*/gi, "")
+    .replace(/```\s*/g, "")
+    .trim();
+ 
+  const first = cleaned.indexOf("{");
+  const last = cleaned.lastIndexOf("}");
+  if (first === -1 || last === -1) {
+    throw new Error(`No JSON object found in model response: ${cleaned.slice(0, 200)}`);
+  }
+  cleaned = cleaned.slice(first, last + 1);
+ 
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch {
+    cleaned = cleaned
+      .replace(/[\u0000-\u001F\u007F]/g, (ch) => {
+        if (ch === "\n") return "\\n";
+        if (ch === "\r") return "\\r";
+        if (ch === "\t") return "\\t";
+        return "";
+      });
+    return JSON.parse(cleaned) as T;
+  }
 }
+
 
 export async function POST(
   req: NextRequest,

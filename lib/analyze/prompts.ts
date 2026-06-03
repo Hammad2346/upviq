@@ -33,7 +33,15 @@ export function buildScoringPrompt(
     .filter(([s]) => !userSkillSet.has(s.toLowerCase()))
     .map(([s]) => s);
 
+  const overviewCharCount = userProfile.description?.length ?? 0;
+  const first250 = userProfile.description?.slice(0, 250) ?? "N/A";
+
   return `You are a senior Upwork marketplace analyst. Score this freelancer profile against the top 10 performers in their niche. Be critical. Do not inflate scores.
+
+## UPWORK PLATFORM LIMITS (enforced — violations cost points)
+- Title: 70 characters hard cap. Under 40 chars = wasted keyword space. Over 70 = truncated by platform.
+- Overview: 5,000 characters hard cap. First 250 characters are the only content visible before "Read More" fold.
+- Skills: 20 tags maximum.
 
 ## NICHE BENCHMARK
 - Avg rate: $${avgRate}/hr | Avg job success: ${avgJobSuccess}% | Top Rated: ${topRatedCount}/10
@@ -41,17 +49,21 @@ export function buildScoringPrompt(
 - High-frequency skills: ${topSkills}
 
 ## USER PROFILE
-Title: ${userProfile.title}
+Title: ${userProfile.title} [${userProfile.title?.length ?? 0} chars]
 Rate: $${userProfile.rate}/hr | Job Success: ${userProfile.jobSuccess}% | Top Rated: ${userProfile.hasTopRated} | Available Now: ${userProfile.hasAvailableNow}
 Jobs completed in niche: ${userProfile.jobsRelatedCount}
-Skills: ${userProfile.skills.join(", ")}
-Overview (first 800 chars):
+Skills (${userProfile.skills.length}/20): ${userProfile.skills.join(", ")}
+Overview length: ${overviewCharCount} characters
+Overview first 250 chars (what clients see before fold):
+${first250}
+Overview first 800 chars (for quality assessment):
 ${userProfile.description?.slice(0, 800) ?? "N/A"}
 
 ## PRE-COMPUTED (use these directly, do not recalculate)
 - Skills user is missing from top performers: ${missingSkills.join(", ")}
 - Rate vs benchmark: user $${userProfile.rate}/hr vs avg $${avgRate}/hr (${userProfile.rate > avgRate ? "+" : ""}${userProfile.rate - avgRate}/hr)
 - Job success vs benchmark: ${userProfile.jobSuccess}% vs ${avgJobSuccess}% avg
+- Unused skill slots: ${20 - userProfile.skills.length} (each empty slot is a lost search keyword)
 
 ## SCORING
 
@@ -59,21 +71,21 @@ ${userProfile.description?.slice(0, 800) ?? "N/A"}
 - Keyword specificity for how clients search in this niche (0–8)
 - Niche clarity vs generic (0–7)
 - Competitive alignment vs top titles above (0–8)
-Deduct for: vague words (expert/professional/freelancer), missing platform/tech keywords
+Deduct for: vague words (expert/professional/freelancer/passionate/dedicated), missing platform/tech keywords, title under 40 chars (wasted keyword space), title over 70 chars (truncated by platform)
 
 ### 2. overviewQuality — max 29 pts
-- Hook: first 2 sentences answer what/for whom/what outcome in <300 chars (0–8)
+- Hook: first 250 characters answer what/for whom/what outcome — this is the fold clients see (0–8)
 - Specificity: concrete tech, platforms, methodologies (0–7)
 - Outcome language: results not tasks (0–7)
 - Scannability: headers/bullets/clear sections (0–4)
 - CTA: specific confident close (0–3)
-Deduct for: filler phrases, vague claims, walls of text
+Deduct for: opening with "I am a..." or "I have X years...", filler phrases, vague claims, walls of text, hook that doesn't land within first 250 chars
 
 ### 3. skillTagsCoverage — max 18 pts
 - Match rate vs top 10 most common niche skills (0–8)
 - Priority ordering: highest-value skills listed first (0–5)
-- Tag quality: relevant, no dilution (0–5)
-The missing skills are already listed above — use them directly in reasoning.
+- Tag quality: relevant, no dilution, slots fully used (0–5)
+The missing skills and unused slots are already listed above — use them directly in reasoning.
 
 ### 4. ratePositioning — max 12 pts
 - Within ±20% of niche avg $${avgRate}/hr (0–5)
@@ -156,7 +168,28 @@ export function buildSuggestionsPrompt(
     })
     .join("\n");
 
+  const skillsReasoning = scoringResults.skillTagsCoverage?.reasoning ?? "";
+  const missingMatch = skillsReasoning.match(/Missing high-value skills:\s*([^\n.]+)/i);
+  const confirmedMissing = missingMatch
+    ? missingMatch[1]
+        .replace(/Add immediately:.*$/i, "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
+  const currentOverviewLength = userProfile.description?.length ?? 0;
+  const targetMin = Math.max(800, Math.round(currentOverviewLength * 0.85));
+  const targetMax = Math.min(2500, Math.round(currentOverviewLength * 1.15));
+
   return `You are a world-class Upwork profile strategist. Produce surgical, high-impact rewrites based on the scoring analysis below.
+
+These weaknesses are FINAL — do not re-evaluate scores or re-derive gaps. Only fix what is listed here.
+
+## UPWORK PLATFORM LIMITS — HARD CONSTRAINTS, NON-NEGOTIABLE
+- Title: 70 characters maximum. Count your characters before returning. Truncation at 70 is enforced by the platform.
+- Overview: 5,000 characters maximum. Target 1,500–2,500 characters — do not pad beyond this.
+- Skills: 20 tags maximum. Return exactly 20 — filling all slots maximises search visibility.
 
 ## PRIORITY FIXES (ordered worst to best — address CRITICAL items first)
 ${priorities}
@@ -171,51 +204,62 @@ ${topSkills}
 ${topOverviews}
 
 ## USER CURRENT PROFILE
-Title: ${userProfile.title}
-Skills: ${userProfile.skills.join(", ")}
-Overview:
+Title: ${userProfile.title} [${userProfile.title?.length ?? 0} chars]
+Skills (${userProfile.skills.length}/20): ${userProfile.skills.join(", ")}
+Overview [${currentOverviewLength} chars]:
 ${userProfile.description?.slice(0, 1200) ?? "N/A"}
 
 ## REWRITE RULES
 
 ### TITLE
-- Max 10 words, lead with highest-value skill or outcome
-- Match keyword density of winning titles above
-- No filler: expert / passionate / dedicated / professional
-- Directly fix the CRITICAL/IMPORTANT weaknesses flagged above
+- Hard limit: 70 characters — count before returning, truncation is enforced by the platform
+- Use as close to 70 characters as possible — every unused character is a lost keyword
+- Preferred structure: Primary Skill | Secondary Skill | Niche or Tool
+- Your title MUST contain at least one exact keyword phrase from the winning titles above
+- If the user's current title already contains a strong keyword, keep it — only replace weak words
+- No filler: expert / passionate / dedicated / professional / skilled
 - Do NOT copy a top performer title — synthesize the best elements
+- Directly fix the CRITICAL/IMPORTANT title weaknesses flagged above
 
 ### OVERVIEW
-- Must be AT LEAST as long as the original — never shorten
+- Hard cap: 5,000 characters — never exceed
+- Target length: ${targetMin}–${targetMax} characters — do not pad beyond this to hit a word count
+- CRITICAL: first 250 characters are the only content clients see before "Read More" — the hook must land entirely within this window
+- The first 250 chars must contain: primary keyword + what you do + who for + one concrete outcome or number
+- Do NOT open with "I am a..." or "I have X years..." — open with a result, a number, or the client's problem
 - Keep every specific tech, platform, credential, and capability from the original
-- Rewrite the opening hook: first 2 sentences must answer what/for whom/what outcome in <300 chars
-- Add outcome language where missing: "I build X that [outcome]" not "I build X"
+- Add outcome language where missing: "I build X that [concrete outcome]" not "I build X"
 - Preserve emoji headers if present — they aid scannability
-- Remove only genuine filler: "I am passionate about…", "Feel free to reach out"
+- Remove only genuine filler: "I am passionate about…", "Feel free to reach out", "I am a hard worker"
 - End with a strong specific CTA
-- Fix every weakness called out in the scoring analysis
+- Fix every weakness called out in the scoring analysis above
 
 ### SKILLS
-- Use the missing skills from skillTagsCoverage reasoning — these are confirmed high-value gaps
-- Reorder: highest search-volume / highest-value skills first
-- Return top 15 in priority order
+- Current skills in order: ${userProfile.skills.join(", ")}
+- Confirmed missing high-value skills (ADD THESE): ${confirmedMissing.length > 0 ? confirmedMissing.join(", ") : "none identified — reorder existing skills only"}
+- Rules:
+  - Start from the current skills list — do not drop any existing skill unless it is genuinely irrelevant spam
+  - Insert the confirmed missing skills at the highest-priority positions
+  - Fill all 20 slots — if fewer than 20 skills exist after merging, add the next highest-frequency niche skills from the list above
+  - "missing" array = only the confirmed missing skills listed above, nothing else invented
+  - "reorder" array = the complete final ordered list of all 20 skills (existing + missing merged, highest value first)
 
 ## OUTPUT
 Return ONLY valid JSON, no markdown, no backticks.
 
 {
   "title": {
-    "rewritten": "<improved title, max 10 words>",
-    "reason": "<exactly what changed and why it will perform better>"
+    "rewritten": "<improved title, strictly under 70 characters — count before returning>",
+    "reason": "<what changed, which keywords added, why it will rank better>"
   },
   "overview": {
-    "rewritten": "<full improved overview, at least as long as original>",
+    "rewritten": "<full improved overview, first 250 chars must hook the client, target ${targetMin}–${targetMax} chars total>",
     "reason": "<what was weak, what changed, what specific improvements were made>"
   },
   "skills": {
-    "missing": ["<high-value skill from top performers user is missing>"],
-    "reorder": ["<skill 1>", "<skill 2>"],
-    "reason": "<which skills moved up, which added, and why>"
+    "missing": ["<only confirmed missing skills from the list above — do not invent>"],
+    "reorder": ["<skill 1>", "<skill 2>", "... all 20 in priority order"],
+    "reason": "<which skills moved up, which added, why>"
   }
 }`.trim();
 }

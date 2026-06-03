@@ -15,36 +15,36 @@ import axios from "axios";
 
 const DEMO_PROFILE: Freelancer = {
   "searchUrl": "https://www.upwork.com/nx/search/talent/?nbs=1&q=ai%20enabled%20game%20developer",
-  "name": "Muhammad Arif H.",
-  "profileId": "01a9936b6343f6bd40",
-  "profileUrl": "https://www.upwork.com/freelancers/~01a9936b6343f6bd40?referrer_url_path=/nx/search/talent/",
-  "title": "Top-Rated Unity Game Developer | Multiplayer | Game Developer | VR/AR",
+  "name": "Muhammad J.",
+  "profileId": "0129ae95e163794919",
+  "profileUrl": "https://www.upwork.com/freelancers/~0129ae95e163794919?referrer_url_path=/nx/search/talent/",
+  "title": "Senior XR Developer | Unity | Unreal | VR/AR | NLP | Computer Vision",
   "location": "Pakistan",
-  "avatarUrl": "https://www.upwork.com/profile-portraits/c1agzH8GEElTk2JeAbWyE6iUNXFhqzrmuVbIQt4bqAiUDQf3mSZo0mISOgI85usTIK",
-  "rate": 30,
-  "jobSuccess": 100,
-  "earnings": "",
+  "avatarUrl": "https://www.upwork.com/profile-portraits/c1gVQRXFWlFXmg4FSBTLhfbXFyLcHekwiXr0hoyfZEeLO6pRtqj2BMnR00HCQPnSfW",
+  "rate": 25,
+  "jobSuccess": null,
+  "earnings": "$30K+ earned",
   "hasAvailableNow": true,
   "hasTopRated": true,
   "skills": [
-    "Game Development",
+    "Virtual Reality",
     "Unity",
-    "Mobile Game Development",
-    "Multiplayer",
-    "AR & VR Development",
-    "Mobile Game",
+    "Game Development",
+    "ARKit",
+    "Gear VR Game",
+    "Oculus Rift Game",
+    "ARToolKit",
+    "Android App Development",
+    "Android SDK",
     "Game Design",
-    "Game Level",
-    "Game Controller",
-    "Game UI/UX Design",
-    "Unreal Engine",
-    "3D Game Art",
-    "2D Game Art",
-    "Card Game",
-    "C#"
+    "Augmented Reality",
+    "AI Chatbot",
+    "Chatbot Development",
+    "AI Development",
+    "Conversational AI"
   ],
-  "description": "I’m a Top-Rated Unity Game Developer with 10+ years of experience creating high-performance, engaging games for Mobile, PC, and WebGL. I help studios, startups, and indie teams turn ideas into production-ready, scalable, and visually polished games from core gameplay mechanics and user experience to full live deployment. 🔥 Core Game Development Expertise Unity 2D & 3D Game Development Cross-Platform Game Builds (Android, iOS, PC, WebGL) Gameplay Mechanics, Progression, and Balancing Game UI & UX, Menus, HUDs, and Animations Performance Optimization (FPS, memory, loading speed) Modular & Reusable Game Systems Multiplayer Features using Photon / Mirror / Netcode AR/VR & Interactive Experiences 🧩 What I Can Build Full mobile or PC games (casual, action, strategy, or simulation) Scalable gameplay systems & reusable frameworks Matchmaking, leaderboards, and progression systems Live updates, analytics & in-app content management Interactive AR/VR or WebGL-based projects ⭐ Why Clients Choose Me ✔ Top-Rated with 100% Job Success ✔ 10+ years of diverse Unity development experience ✔ Strong system design & debugging skills ✔ Clear communication, reliable delivery, and fast iteration I understand what makes a game feel fun, optimized, and stable. My focus is always on delivering production-quality games with clean architecture, creative design, and smooth player experience. 👉 Let’s discuss how to bring your game idea to life from concept to live release.",
-  "jobsRelatedCount": 20,
+  "description": "I help businesses create high-performance VR/AR applications, XR training simulations, and interactive AR experiences using Unity and Unreal Engine. With 9+ years of experience, I deliver immersive, scalable solutions across Meta Quest, HTC Vive, Apple Vision Pro, Mobile, and WebAR platforms. I specialize in interactive XR experiences, real-time 3D applications, and immersive simulations, integrating NLP and Computer Vision to enhance functionality and engagement. My solutions are cross-platform, optimized for performance, and designed to deliver measurable business impact. Core Skills : VR / AR / XR Development Unity 3D & Unreal Engine XR Training & Healthcare Simulations Interactive Multiplayer Experiences NLP & Conversational Interfaces Computer Vision & Image Recognition WebAR & Interactive 3D Visualization Cross-Platform XR & Mobile Deployment Performance Optimization & UX-Focused Development Why Hire Me: ✅ Build immersive XR experiences that improve training, sales, and engagement ✅ Deliver real-time 3D simulations optimized for VR/AR devices ✅ Integrate intelligent NLP and interactive interfaces ✅ Create scalable, cross-platform applications ✅ Structured workflow focused on business-driven results 🚀 Ready to transform your idea into an immersive, interactive XR experience that engages users and drives measurable results. Portfolio Reality Fence – AR Visualization: AR app to preview and customize fences in real-world environments. Realistic 3D, intuitive UI, boosts customer engagement. Inner Voyage I – VR Medical Training: VR cardiovascular training with interactive 3D heart, guided scenarios, spatial audio, and cinematic visuals. Optimized for Meta Quest. Orion Beer – Interactive AR Filter: AR filter campaign for Japan. Immersive visuals, mobile-ready, increased social media engagement and brand visibility.",
+  "jobsRelatedCount": null,
   "scrapedAt": "2026-04-01T08:36:42.806Z"
 }
 function mapDbProfile(row: any): Freelancer {
@@ -77,7 +77,7 @@ export default function ProfilePage() {
 
   const { analyze } = useAnalyze();
   const { dbUser, dbProfile, loading: authLoading } = useAuth();
-
+  console.log(dbUser)
   const savedProfile = dbProfile ? mapDbProfile(dbProfile) : null;
   const activeProfile = profile ?? savedProfile;
   const descLines = activeProfile?.description?.split("\n");

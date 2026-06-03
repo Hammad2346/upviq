@@ -17,16 +17,18 @@ async function callGroq(prompt: string): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "openai/gpt-oss-120b",
-      temperature: 0.3,
-      messages: [{ role: "user", content: prompt }],
-    }),
+  model: "openai/gpt-oss-120b",
+  temperature: 0.3,
+  response_format: { type: "json_object" },
+  messages: [{ role: "user", content: prompt }],
+}),
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Groq error: ${err}`);
-  }
+if (!res.ok) {
+  const err = await res.text();
+  console.error(`[callGroq] ${res.status} ${res.statusText}:`, err);
+  throw new Error(`Groq error ${res.status}: ${err}`);
+}
 
   const data = await res.json();
   return data.choices[0].message.content;
