@@ -1,9 +1,10 @@
 import pool from "@/lib/db"
 import axios from "axios"
 
-const UPWORK_GRAPHQL    = "https://api.upwork.com/graphql"
+const UPWORK_GRAPHQL     = "https://api.upwork.com/graphql"
 const MIN_JOBS_THRESHOLD = 5
-const DAYS_POSTED        = 1
+const POOL_PAGE_SIZE     = 500
+const POOL_TARGET        = 1000
 
 const PROPOSAL_BUCKETS: Record<string, number> = {
   "0":  2,
@@ -32,17 +33,34 @@ export interface KeywordScored extends KeywordRawData {
   opportunityScore: number
 }
 
-const MARKET_QUERY = `
-  query MarketData($keyword: String!, $daysPosted: Int!) {
+const POOL_QUERY = `
+  query JobPool($pagination: PageFilterInput!) {
     publicMarketplaceJobPostingsSearch(
       marketPlaceJobFilter: {
-        q: $keyword
-        daysPosted: $daysPosted
+        pagination: $pagination
       }
     ) {
       paging {
         total
+        count
+        offset
       }
+      jobs {
+        ontologySkills {
+          label
+        }
+      }
+    }
+  }
+`
+
+const PROPOSALS_QUERY = `
+  query KeywordProposals($keyword: String!) {
+    publicMarketplaceJobPostingsSearch(
+      marketPlaceJobFilter: {
+        searchExpression_eq: $keyword
+      }
+    ) {
       facets {
         proposals
       }
@@ -50,31 +68,84 @@ const MARKET_QUERY = `
   }
 `
 
-const MOCK_DATA: Record<string, { totalJobs: number; avgProposals: number }> = {
-  default:      { totalJobs: 12,  avgProposals: 18 },
-  "react":      { totalJobs: 847, avgProposals: 28 },
-  "next.js":    { totalJobs: 412, avgProposals: 22 },
-  "node.js":    { totalJobs: 634, avgProposals: 31 },
-  "python":     { totalJobs: 920, avgProposals: 35 },
-  "typescript": { totalJobs: 380, avgProposals: 19 },
-  "vue.js":     { totalJobs: 210, avgProposals: 16 },
-  "php":        { totalJobs: 290, avgProposals: 38 },
-  "wordpress":  { totalJobs: 540, avgProposals: 42 },
-  "flutter":    { totalJobs: 175, avgProposals: 14 },
-  "webflow":    { totalJobs: 3,   avgProposals: 0  },
+const MOCK_POOL: Array<{ ontologySkills: Array<{ label: string }> }> = [
+  ...Array(142).fill(null).map(() => ({ ontologySkills: [{ label: "React" }] })),
+  ...Array(98).fill(null).map(()  => ({ ontologySkills: [{ label: "Python" }] })),
+  ...Array(76).fill(null).map(()  => ({ ontologySkills: [{ label: "Node.js" }] })),
+  ...Array(61).fill(null).map(()  => ({ ontologySkills: [{ label: "WordPress" }] })),
+  ...Array(54).fill(null).map(()  => ({ ontologySkills: [{ label: "Next.js" }] })),
+  ...Array(43).fill(null).map(()  => ({ ontologySkills: [{ label: "TypeScript" }] })),
+  ...Array(38).fill(null).map(()  => ({ ontologySkills: [{ label: "PHP" }] })),
+  ...Array(29).fill(null).map(()  => ({ ontologySkills: [{ label: "Flutter" }] })),
+  ...Array(18).fill(null).map(()  => ({ ontologySkills: [{ label: "Vue.js" }] })),
+  ...Array(6).fill(null).map(()   => ({ ontologySkills: [{ label: "Webflow" }] })),
+  ...Array(435).fill(null).map(() => ({ ontologySkills: [] })),
+]
+
+const MOCK_PROPOSALS: Record<string, number> = {
+  "react":      41,
+  "next.js":    29,
+  "node.js":    35,
+  "python":     18,
+  "typescript": 22,
+  "vue.js":     12,
+  "php":        44,
+  "wordpress":  48,
+  "flutter":    16,
+  "webflow":    8,
+  "default":    20,
 }
 
-async function fetchMarketData(
-  keyword: string
-): Promise<{ totalJobs: number; avgProposals: number }> {
+async function fetchJobPool(): Promise<Array<{ ontologySkills: Array<{ label: string }> }>> {
   if (process.env.UPWORK_MOCK === "true") {
-    const key = keyword.toLowerCase()
-    return MOCK_DATA[key] ?? MOCK_DATA["default"]
+    return MOCK_POOL
+  }
+
+  const allJobs: Array<{ ontologySkills: Array<{ label: string }> }> = []
+
+  for (let offset = 0; offset < POOL_TARGET; offset += POOL_PAGE_SIZE) {
+    const { data: json } = await axios.post(
+      UPWORK_GRAPHQL,
+      {
+        query: POOL_QUERY,
+        variables: {
+          pagination: { pageOffset: offset, pageSize: POOL_PAGE_SIZE },
+        },
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${process.env.UPWORK_ACCESS_TOKEN}`,
+          "Content-Type":  "application/json",
+        },
+      }
+    )
+
+    if (json.errors?.length) throw new Error(json.errors[0].message)
+
+    const result = json.data?.publicMarketplaceJobPostingsSearch
+    if (!result) throw new Error("No data from Upwork pool query")
+
+    const jobs: Array<{ ontologySkills: Array<{ label: string }> }> = result.jobs ?? []
+    allJobs.push(...jobs)
+
+    const total: number = result.paging?.total ?? 0
+
+    if (allJobs.length >= total || jobs.length < POOL_PAGE_SIZE) break
+
+    await new Promise(r => setTimeout(r, 300))
+  }
+
+  return allJobs
+}
+
+async function fetchAvgProposals(keyword: string): Promise<number> {
+  if (process.env.UPWORK_MOCK === "true") {
+    return MOCK_PROPOSALS[keyword.toLowerCase()] ?? MOCK_PROPOSALS["default"]
   }
 
   const { data: json } = await axios.post(
     UPWORK_GRAPHQL,
-    { query: MARKET_QUERY, variables: { keyword, daysPosted: DAYS_POSTED } },
+    { query: PROPOSALS_QUERY, variables: { keyword } },
     {
       headers: {
         "Authorization": `Bearer ${process.env.UPWORK_ACCESS_TOKEN}`,
@@ -85,14 +156,9 @@ async function fetchMarketData(
 
   if (json.errors?.length) throw new Error(json.errors[0].message)
 
-  const data = json.data?.publicMarketplaceJobPostingsSearch
-  if (!data) throw new Error("No data from Upwork")
+  const proposalsFacet: Record<string, number> =
+    json.data?.publicMarketplaceJobPostingsSearch?.facets?.proposals ?? {}
 
-  const totalJobs: number                        = data.paging?.total ?? 0
-  const proposalsFacet: Record<string, number>   = data.facets?.proposals ?? {}
-
-  // Weighted average across proposal buckets
-  // Each bucket key is the lower bound; midpoints approximate the centre of each range
   let totalWeight = 0
   let weightedSum = 0
   for (const [key, count] of Object.entries(proposalsFacet)) {
@@ -103,49 +169,57 @@ async function fetchMarketData(
     }
   }
 
-  return {
-    totalJobs,
-    avgProposals: totalWeight > 0 ? weightedSum / totalWeight : 0,
-  }
+  return totalWeight > 0 ? weightedSum / totalWeight : 0
 }
 
-/**
- * Demand: absolute scale capped at 1000 jobs/day (reasonable Upwork ceiling).
- * e.g. react 847 jobs → 85
- */
-function absoluteDemand(totalJobs: number): number {
-  return Math.min(100, Math.round((totalJobs / 1000) * 100))
+function countKeywordInPool(
+  jobs: Array<{ ontologySkills: Array<{ label: string }> }>,
+  upworkSkillName: string
+): number {
+  const needle = upworkSkillName.toLowerCase()
+  return jobs.filter(job =>
+    job.ontologySkills?.some(s => s.label?.toLowerCase() === needle)
+  ).length
 }
 
-/**
- * Competition: avg proposals mapped to 0–100.
- * 50+ avg proposals = max competition (100).
- * e.g. 28 proposals → 56
- */
-function absoluteCompetition(avgProposals: number): number {
+function demandScore(keywordJobCount: number, totalJobs: number): number {
+  if (totalJobs === 0) return 0
+  return Math.min(100, Math.round((keywordJobCount / totalJobs) * 100))
+}
+
+function competitionScore(avgProposals: number): number {
   return Math.min(100, Math.round((avgProposals / 50) * 100))
 }
 
 export async function scoreUserKeywords(
   keywords: Array<{ id: number; user_id: number; keyword: string; upwork_skill_name: string }>
 ): Promise<KeywordScored[]> {
+  const pool_jobs = await fetchJobPool()
+  const totalJobs = pool_jobs.length
+
   const rawResults: KeywordRawData[] = []
 
   for (const kw of keywords) {
     try {
-      const { totalJobs, avgProposals } = await fetchMarketData(kw.upwork_skill_name)
+      const jobCount = countKeywordInPool(pool_jobs, kw.upwork_skill_name)
+
+      let avgProposals = 0
+      if (jobCount >= MIN_JOBS_THRESHOLD) {
+        avgProposals = await fetchAvgProposals(kw.upwork_skill_name)
+        await new Promise(r => setTimeout(r, 300))
+      }
 
       rawResults.push({
         keywordId:       kw.id,
         userId:          kw.user_id,
         keyword:         kw.keyword,
         upworkSkillName: kw.upwork_skill_name,
-        rawJobCount:     totalJobs,
-        avgProposals:    totalJobs < MIN_JOBS_THRESHOLD ? 0 : avgProposals,
-        status:          totalJobs < MIN_JOBS_THRESHOLD ? "no_data" : "scored",
+        rawJobCount:     jobCount,
+        avgProposals,
+        status:          jobCount < MIN_JOBS_THRESHOLD ? "no_data" : "scored",
       })
     } catch (err) {
-      console.error(`Failed fetching market data for "${kw.keyword}":`, err)
+      console.error(`Failed scoring "${kw.keyword}":`, err)
       rawResults.push({
         keywordId:       kw.id,
         userId:          kw.user_id,
@@ -156,9 +230,6 @@ export async function scoreUserKeywords(
         status:          "no_data",
       })
     }
-
-    // Avoid hammering the API
-    await new Promise(r => setTimeout(r, 300))
   }
 
   const scoreable = rawResults.filter(r => r.status === "scored")
@@ -173,26 +244,27 @@ export async function scoreUserKeywords(
     }))
   }
 
-  /*
-   * Use ABSOLUTE scales — not relative normalization.
-   *
-   * Relative normalization (old approach) had two problems:
-   *   1. A single keyword always collapsed to 50/50 (min === max edge case).
-   *   2. Scores shifted every time a keyword was added/removed, making them
-   *      meaningless for comparison over time.
-   *
-   * Absolute scales give stable, intuitive scores regardless of how many
-   * keywords are tracked.
-   */
-  const scored: KeywordScored[] = scoreable.map((r) => {
-    const demand      = absoluteDemand(r.rawJobCount)       // e.g. 847 jobs  → 85
-    const competition = absoluteCompetition(r.avgProposals) // e.g. 28 props  → 56
-    const competitionPenalty = (competition / 100) * 0.6
+  const scored: KeywordScored[] = scoreable.map(r => {
+    const demand      = demandScore(r.rawJobCount, totalJobs)
+    const competition = competitionScore(r.avgProposals)
+
+    /*
+     * Opportunity: demand is the base. Competition penalty is scaled DOWN
+     * by how high demand is — a React dev with 30 avg proposals still beats
+     * a Webflow dev with 3, because React's demand share is 40x larger.
+     *
+     * penalty = (competition / 100) * 0.6 * (1 - demand / 100)
+     *
+     * At demand=100 → penalty approaches 0   (competition barely matters)
+     * At demand=0   → penalty approaches 0.6 (but score is already 0)
+     * At demand=50  → max penalty is 0.3
+     */
+    const competitionPenalty = (competition / 100) * 0.6 * (1 - demand / 100)
+
     return {
       ...r,
       demandScore:      demand,
       competitionScore: competition,
-      // High demand + low competition = high opportunity
       opportunityScore: Math.round(demand * (1 - competitionPenalty)),
     }
   })
