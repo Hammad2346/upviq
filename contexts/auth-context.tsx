@@ -15,33 +15,38 @@ import axios from "axios";
 import { getAnalysis } from "@/lib/api";
 
 type AuthContextType = {
-  firebaseUser:    FirebaseUser | null;
-  dbUser:          any;
-  dbProfile:       any;
-  dbAiAnalysis:    any;
-  loading:         boolean;
-  refreshProfile:  () => Promise<void>;
-  refreshAnalysis: () => Promise<void>;
-  refreshAll:      () => Promise<void>;
+  firebaseUser:      FirebaseUser | null;
+  dbUser:            any;
+  dbProfile:         any;
+  dbAiAnalysis:      any;
+  loading:           boolean;
+  upworkConnected:   boolean;
+  refreshProfile:    () => Promise<void>;
+  refreshAnalysis:   () => Promise<void>;
+  refreshAll:        () => Promise<void>;
+  refreshUpworkStatus: () => Promise<void>;
 };
 
 const authContext = createContext<AuthContextType>({
-  firebaseUser:    null,
-  dbUser:          null,
-  dbProfile:       null,
-  dbAiAnalysis:    null,
-  loading:         true,
-  refreshProfile:  async () => {},
-  refreshAnalysis: async () => {},
-  refreshAll:      async () => {},
+  firebaseUser:      null,
+  dbUser:            null,
+  dbProfile:         null,
+  dbAiAnalysis:      null,
+  loading:           true,
+  upworkConnected:   false,
+  refreshProfile:    async () => {},
+  refreshAnalysis:   async () => {},
+  refreshAll:        async () => {},
+  refreshUpworkStatus: async () => {},
 });
 
 export function AuthContext({ children }: { children: ReactNode }) {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [dbUser,       setDbUser]       = useState<any>(null);
-  const [dbProfile,    setDbProfile]    = useState<any>(null);
-  const [dbAiAnalysis, setDbAiAnalysis] = useState<any>(null);
-  const [loading,      setLoading]      = useState(true);
+  const [firebaseUser,    setFirebaseUser]    = useState<FirebaseUser | null>(null);
+  const [dbUser,          setDbUser]          = useState<any>(null);
+  const [dbProfile,       setDbProfile]       = useState<any>(null);
+  const [dbAiAnalysis,    setDbAiAnalysis]    = useState<any>(null);
+  const [loading,         setLoading]         = useState(true);
+  const [upworkConnected, setUpworkConnected] = useState(false);
 
   const pathname = usePathname();
   const router   = useRouter();
@@ -81,6 +86,15 @@ export function AuthContext({ children }: { children: ReactNode }) {
     }
   }
 
+  async function fetchUpworkStatus(userId: number) {
+    try {
+      const res = await axios.get(`/api/users/upwork-status?user_id=${userId}`)
+      setUpworkConnected(res.data.connected === true)
+    } catch {
+      setUpworkConnected(false)
+    }
+  }
+
   async function refreshProfile() {
     if (!dbUser?.id) {
       setDbProfile(null);
@@ -99,10 +113,16 @@ export function AuthContext({ children }: { children: ReactNode }) {
     await fetchAnalysis(freshProfile);
   }
 
+  async function refreshUpworkStatus() {
+    if (!dbUser?.id) return
+    await fetchUpworkStatus(dbUser.id)
+  }
+
   function clearUserState() {
     setDbUser(null);
     setDbProfile(null);
     setDbAiAnalysis(null);
+    setUpworkConnected(false);
   }
 
   useEffect(() => {
@@ -117,6 +137,7 @@ export function AuthContext({ children }: { children: ReactNode }) {
           if (profile) {
             await fetchAnalysis(profile);
           }
+          await fetchUpworkStatus(user.id)
         }
       } else {
         clearUserState();
@@ -142,9 +163,11 @@ export function AuthContext({ children }: { children: ReactNode }) {
         dbProfile,
         dbAiAnalysis,
         loading,
+        upworkConnected,
         refreshProfile,
         refreshAnalysis,
         refreshAll,
+        refreshUpworkStatus,
       }}
     >
       {children}
